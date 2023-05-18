@@ -1,0 +1,11 @@
+- add tests!!!
+- // FIXME HACK USE PROPER ErrQuit sentinel instead!!!
+- Look for various FIXME and TODO
+- add command "variables" to show the contents of the Bag
+- uniform wrap all io.EOF and, simplify logic around all io.EOF and especially use errors.Is(err, io.ERR) to allow the wrapping
+- replace fmt.Fprintln(pcd.Stdout, ...) with pcd.Println(...)
+- look at all print functions and make them uniform
+  - this should also add a prefix with the step name or similar? mhh too long... 
+- check that no two steps have the same Title
+- probably remove kong to parse the REPL, keep it to parse the program itself?
+- support [checkpoints](https://en.wikipedia.org/wiki/Application_checkpointing)? To allow re-running the procedure without starting from scratch, if something in-between went wrong?

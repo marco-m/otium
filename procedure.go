@@ -1,0 +1,209 @@
+package otium
+
+import (
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"strings"
+
+	"github.com/alecthomas/kong"
+	"github.com/google/shlex"
+	"github.com/peterh/liner"
+)
+
+type Procedure struct {
+	ProcedureOpts
+	steps []*Step
+	// Index into the step to execute.
+	stepIdx int
+	bag     Bag
+	parser  *kong.Kong
+	// Warning: will be initialized by Execute(), not by NewProcedure().
+	linenoise *liner.State
+}
+
+type ProcedureOpts struct {
+	Title  string
+	Desc   string
+	Stdin  io.Reader
+	Stdout io.Writer
+}
+
+func NewProcedure(opts ProcedureOpts) *Procedure {
+	if opts.Stdin == nil {
+		opts.Stdin = os.Stdin
+	}
+	if opts.Stdout == nil {
+		opts.Stdout = os.Stdout
+	}
+	pcd := &Procedure{
+		ProcedureOpts: opts,
+		bag:           Bag{bag: make(map[string]string)},
+	}
+
+	description := "otium v0.0.0"
+
+	pcd.parser = kong.Must(&topcli{},
+		kong.Name(""),
+		kong.Description(
+			description+" -- a simple incremental automation system (https://github.com/marco-m/otium)"),
+		kong.Exit(func(int) {}),
+		kong.ConfigureHelp(kong.HelpOptions{
+			// Must be disabled because it doesn't make sense in a REPL.
+			NoAppSummary:   true,
+			WrapUpperBound: 80,
+		}),
+		// Must be disabled because it doesn't make sense in a REPL.
+		kong.NoDefaultHelp(),
+	)
+
+	return pcd
+}
+
+func (pcd *Procedure) AddStep(step *Step) {
+	pcd.steps = append(pcd.steps, step)
+}
+
+func (pcd *Procedure) Execute() error {
+	var missingRuns []error
+	for i, step := range pcd.steps {
+		if step.Run == nil {
+			missingRuns = append(missingRuns, fmt.Errorf("step misses Run function: %d %s", i+1, step.Title))
+		}
+	}
+	if len(missingRuns) > 0 {
+		return errors.Join(missingRuns...)
+	}
+
+	pcd.linenoise = liner.NewLiner()
+	// Restore terminal to previous mode, super important.
+	defer pcd.linenoise.Close()
+	pcd.bag.linenoise = pcd.linenoise
+	pcd.linenoise.SetCtrlCAborts(true)
+
+	//
+	// Configure completer, part 1.
+	// TODO think how to make it know deeper about the possible completions...
+	//
+	pcd.linenoise.SetTabCompletionStyle(liner.TabPrints)
+	var commands []string
+	for _, node := range pcd.parser.Model.Children {
+		commands = append(commands, node.Name)
+	}
+	topCompleter := func(line string) []string {
+		completions := make([]string, 0, len(commands))
+		line = strings.ToLower(line)
+		for _, cmd := range commands {
+			if strings.HasPrefix(cmd, line) {
+				completions = append(completions, cmd)
+			}
+		}
+		//fmt.Printf("completer: %q, completions: %q\n", line, completions)
+		return completions
+	}
+
+	fmt.Fprintf(pcd.Stdout, "# %s\n\n", strings.TrimSpace(pcd.Title))
+	fmt.Fprintf(pcd.Stdout, "%s\n", strings.TrimSpace(pcd.Desc))
+	printToc(pcd)
+
+	//
+	// Main loop.
+	//
+	var kongCtx *kong.Context
+	for {
+		if pcd.stepIdx == len(pcd.steps) {
+			fmt.Println("(top)>> Procedure terminated successfully")
+			return nil
+		}
+
+		// Look at last command.
+		if kongCtx != nil {
+			cmd := kongCtx.Command()
+			if !(strings.HasPrefix(cmd, "list") ||
+				strings.HasPrefix(cmd, "help") ||
+				strings.HasPrefix(cmd, "?")) {
+				printToc(pcd)
+			}
+		}
+
+		// We set the completer on each loop because the sub repl in bag.Get
+		// sets its own.
+		pcd.linenoise.SetCompleter(topCompleter)
+
+		var line string
+		fmt.Printf("(top)>> Enter a command or '?' for help\n")
+		line, err := pcd.linenoise.Prompt("(top)>> ")
+		// TODO if we receive EOF, we should return no error if the procedure
+		// has not started yet, and an error if the procedure has already started
+		if err != nil {
+			return err
+		}
+
+		//
+		// Parse user input.
+		//
+		var args []string
+		args, err = shlex.Split(line)
+		if err != nil {
+			pcd.parser.Errorf("%s", err)
+			continue
+		}
+		kongCtx, err = pcd.parser.Parse(args)
+		if err != nil {
+			pcd.parser.Errorf("%s", err)
+			continue
+		}
+		pcd.linenoise.AppendHistory(line)
+
+		//
+		// Execute user command.
+		//
+		err = kongCtx.Run(&Bind{pcd: pcd})
+		// FIXME: sometimes the error from a command (eg cmdNext) is
+		//  unrecoverable. In this case, we should exit the loop and return a
+		//  non-zero status code from the process...
+		if errors.Is(err, io.EOF) {
+			return err
+		}
+		if errors.Is(err, errBack) {
+			continue
+		}
+		if err != nil {
+			pcd.parser.Errorf("%s", err)
+			continue
+		}
+	}
+}
+
+// Table of contents
+func printToc(pcd *Procedure) {
+	fmt.Fprintf(pcd.Stdout, "\n## Table of contents\n\n")
+	for i, step := range pcd.steps {
+		var next string
+		if i == pcd.stepIdx {
+			next = "next->"
+		}
+		fmt.Fprintf(pcd.Stdout, "%6s %2d. %s\n", next, i+1, strings.TrimSpace(step.Title))
+	}
+	fmt.Println()
+}
+
+func cmdNext(pcd *Procedure) error {
+	if pcd.stepIdx >= len(pcd.steps) {
+		return fmt.Errorf("next: internal error: step index > len(steps)")
+	}
+	step := pcd.steps[pcd.stepIdx]
+	fmt.Fprintf(pcd.Stdout, "\n## (%d of %d) %s\n\n", pcd.stepIdx+1,
+		len(pcd.steps), strings.TrimSpace(step.Title))
+
+	// TODO replace line below and render Desc as template!
+	fmt.Fprintf(pcd.Stdout, "%s\n\n", strings.TrimSpace(step.Desc))
+
+	if err := step.Run(pcd.bag); err != nil {
+		return fmt.Errorf("next: %w", err)
+	}
+	pcd.stepIdx++
+
+	return nil
+}
