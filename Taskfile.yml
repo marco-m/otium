@@ -1,0 +1,32 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: test
+      - task: build
+
+  test:
+    cmds:
+      - mkdir -p bin
+      - gotestsum -- -coverprofile=bin/coverage.out ./...
+      - task: lint
+
+  lint:
+    - forbidigo -set_exit_status
+    - cd expect && forbidigo -set_exit_status
+
+  browser:
+    cmds:
+      - go tool cover -html=bin/coverage.out
+
+  build:
+    cmds:
+      - go build ./...
+
+  deps:
+    cmds:
+      - go install gotest.tools/gotestsum@latest
+      - go install github.com/ashanbrown/forbidigo@latest
