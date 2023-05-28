@@ -1,4 +1,5 @@
 - add tests!!!
+- set version string and replace the fixed one in the help
 - // FIXME HACK USE PROPER ErrQuit sentinel instead!!!
 - Look for various FIXME and TODO
 - add command "variables" to show the contents of the Bag

@@ -7,7 +7,7 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-type Bind struct {
+type bind struct {
 	pcd *Procedure
 }
 
@@ -67,20 +67,20 @@ Ctrl-D       (if line is empty) End of File - usually quits application
 
 type listCmd struct{}
 
-func (l *listCmd) Run(bind *Bind) error {
+func (l *listCmd) Run(bind *bind) error {
 	printToc(bind.pcd)
 	return nil
 }
 
 type nextCmd struct{}
 
-func (n *nextCmd) Run(bind *Bind) error {
+func (n *nextCmd) Run(bind *bind) error {
 	return cmdNext(bind.pcd)
 }
 
 type quitCmd struct{}
 
-func (q *quitCmd) Run(bind *Bind) error {
+func (q *quitCmd) Run(bind *bind) error {
 	// FIXME HACK USE PROPER ErrQuit sentinel instead!!!
 	return io.EOF
 }

@@ -12,6 +12,9 @@ import (
 	"github.com/peterh/liner"
 )
 
+// Procedure is made of a sequence of [Step]. Create it with [NewProcedure],
+// fill it with [Procedure.AddStep] and finally start it with
+// [Procedure.Execute].
 type Procedure struct {
 	ProcedureOpts
 	steps []*Step
@@ -23,13 +26,19 @@ type Procedure struct {
 	linenoise *liner.State
 }
 
+// ProcedureOpts is used by [NewProcedure] to create a Procedure.
 type ProcedureOpts struct {
-	Title  string
+	// Title is the name of the Procedure, shown at the beginning of the
+	// program.
+	Title string
+	// Desc is the summary of what the procedure is about, shown at the
+	// beginning of the program, just after the Title.
 	Desc   string
 	Stdin  io.Reader
 	Stdout io.Writer
 }
 
+// NewProcedure creates a Procedure.
 func NewProcedure(opts ProcedureOpts) *Procedure {
 	if opts.Stdin == nil {
 		opts.Stdin = os.Stdin
@@ -61,15 +70,20 @@ func NewProcedure(opts ProcedureOpts) *Procedure {
 	return pcd
 }
 
+// AddStep adds a [Step] to [Procedure].
 func (pcd *Procedure) AddStep(step *Step) {
 	pcd.steps = append(pcd.steps, step)
 }
 
+// Execute starts the [Procedure] by putting the user into a REPL.
+// If it returns an error, the user program should print it and exit with a
+// non-zero status code. See the examples for the suggested usage.
 func (pcd *Procedure) Execute() error {
 	var missingRuns []error
 	for i, step := range pcd.steps {
 		if step.Run == nil {
-			missingRuns = append(missingRuns, fmt.Errorf("step misses Run function: %d %s", i+1, step.Title))
+			missingRuns = append(missingRuns,
+				fmt.Errorf("step misses Run function: %d %s", i+1, step.Title))
 		}
 	}
 	if len(missingRuns) > 0 {
@@ -113,7 +127,7 @@ func (pcd *Procedure) Execute() error {
 	var kongCtx *kong.Context
 	for {
 		if pcd.stepIdx == len(pcd.steps) {
-			fmt.Println("(top)>> Procedure terminated successfully")
+			fmt.Printf("\n(top)>> Procedure terminated successfully\n")
 			return nil
 		}
 
@@ -135,7 +149,8 @@ func (pcd *Procedure) Execute() error {
 		fmt.Printf("(top)>> Enter a command or '?' for help\n")
 		line, err := pcd.linenoise.Prompt("(top)>> ")
 		// TODO if we receive EOF, we should return no error if the procedure
-		// has not started yet, and an error if the procedure has already started
+		//  has not started yet, and an error if the procedure has already
+		//  started
 		if err != nil {
 			return err
 		}
@@ -159,7 +174,7 @@ func (pcd *Procedure) Execute() error {
 		//
 		// Execute user command.
 		//
-		err = kongCtx.Run(&Bind{pcd: pcd})
+		err = kongCtx.Run(&bind{pcd: pcd})
 		// FIXME: sometimes the error from a command (eg cmdNext) is
 		//  unrecoverable. In this case, we should exit the loop and return a
 		//  non-zero status code from the process...
@@ -184,7 +199,8 @@ func printToc(pcd *Procedure) {
 		if i == pcd.stepIdx {
 			next = "next->"
 		}
-		fmt.Fprintf(pcd.Stdout, "%6s %2d. %s\n", next, i+1, strings.TrimSpace(step.Title))
+		fmt.Fprintf(pcd.Stdout, "%6s %2d. %s\n", next, i+1,
+			strings.TrimSpace(step.Title))
 	}
 	fmt.Println()
 }

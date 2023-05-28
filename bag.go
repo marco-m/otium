@@ -8,11 +8,17 @@ import (
 	"github.com/peterh/liner"
 )
 
+// Bag is passed to the [RunFn] of [Step]. It contains all the k/v pairs added
+// by the various steps during the execution of the otium [Procedure].
 type Bag struct {
 	bag       map[string]string
 	linenoise *liner.State
 }
 
+// Get returns the value of key if key exists. If key doesn't exist, Get
+// interactively asks the user for it, prompting with desc.
+// NOTE: this means that Get is interactive and blocking. See the examples for
+// idiomatic usage.
 func (b *Bag) Get(key, desc string) (string, error) {
 	if val, ok := b.bag[key]; ok {
 		return val, nil
@@ -39,7 +45,8 @@ func (b *Bag) Get(key, desc string) (string, error) {
 	})
 
 	for {
-		fmt.Printf("(input)>> Enter %s (set %s <value>) or '?' for help\n", desc, key)
+		fmt.Printf("(input)>> Enter %s (set %s <value>) or '?' for help\n",
+			desc, key)
 		line, err := b.linenoise.Prompt("(input)>> ")
 		if err != nil {
 			if err == io.EOF {
@@ -57,7 +64,11 @@ func (b *Bag) Get(key, desc string) (string, error) {
 		}
 		switch tokens[0] {
 		case "help", "?":
-			fmt.Print(help)
+			fmt.Print(`
+  set <key> <value>    set <key> to <value>
+  back                 go back to the top level REPL
+
+`)
 			continue
 		case "back":
 			return "", errBack
@@ -80,12 +91,7 @@ func (b *Bag) Get(key, desc string) (string, error) {
 	}
 }
 
-const help = `
-  set <key> <value>    set <key> to <value>
-  back                 go back to the top level REPL
-
-`
-
+// Put adds key/val to bag, overwriting val if key already exists.
 func (b *Bag) Put(key, val string) {
 	b.bag[key] = val
 }
