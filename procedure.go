@@ -79,15 +79,23 @@ func (pcd *Procedure) AddStep(step *Step) {
 // If it returns an error, the user program should print it and exit with a
 // non-zero status code. See the examples for the suggested usage.
 func (pcd *Procedure) Execute() error {
-	var missingRuns []error
+	if len(pcd.steps) == 0 {
+		return errors.New("procedure has zero steps; want at least one")
+	}
+
+	var errs []error
 	for i, step := range pcd.steps {
+		if strings.TrimSpace(step.Title) == "" {
+			errs = append(errs,
+				fmt.Errorf("step (%d) has empty Title", i+1))
+		}
 		if step.Run == nil {
-			missingRuns = append(missingRuns,
-				fmt.Errorf("step misses Run function: %d %s", i+1, step.Title))
+			errs = append(errs,
+				fmt.Errorf("step (%d %s) misses Run function", i+1, step.Title))
 		}
 	}
-	if len(missingRuns) > 0 {
-		return errors.Join(missingRuns...)
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
 
 	pcd.linenoise = liner.NewLiner()
