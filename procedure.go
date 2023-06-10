@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -33,19 +32,11 @@ type ProcedureOpts struct {
 	Title string
 	// Desc is the summary of what the procedure is about, shown at the
 	// beginning of the program, just after the Title.
-	Desc   string
-	Stdin  io.Reader
-	Stdout io.Writer
+	Desc string
 }
 
 // NewProcedure creates a Procedure.
 func NewProcedure(opts ProcedureOpts) *Procedure {
-	if opts.Stdin == nil {
-		opts.Stdin = os.Stdin
-	}
-	if opts.Stdout == nil {
-		opts.Stdout = os.Stdout
-	}
 	pcd := &Procedure{
 		ProcedureOpts: opts,
 		bag:           Bag{bag: make(map[string]string)},
@@ -125,8 +116,8 @@ func (pcd *Procedure) Execute() error {
 		return completions
 	}
 
-	fmt.Fprintf(pcd.Stdout, "# %s\n\n", strings.TrimSpace(pcd.Title))
-	fmt.Fprintf(pcd.Stdout, "%s\n", strings.TrimSpace(pcd.Desc))
+	fmt.Printf("# %s\n\n", strings.TrimSpace(pcd.Title))
+	fmt.Printf("%s\n", strings.TrimSpace(pcd.Desc))
 	printToc(pcd)
 
 	//
@@ -183,7 +174,7 @@ func (pcd *Procedure) Execute() error {
 		// Execute user command.
 		//
 		err = kongCtx.Run(&bind{pcd: pcd})
-		// FIXME: sometimes the error from a command (eg cmdNext) is
+		// FIXME: sometimes the error from a command (e.g. cmdNext) is
 		//  unrecoverable. In this case, we should exit the loop and return a
 		//  non-zero status code from the process...
 		if errors.Is(err, io.EOF) {
@@ -201,13 +192,13 @@ func (pcd *Procedure) Execute() error {
 
 // Table of contents
 func printToc(pcd *Procedure) {
-	fmt.Fprintf(pcd.Stdout, "\n## Table of contents\n\n")
+	fmt.Printf("\n## Table of contents\n\n")
 	for i, step := range pcd.steps {
 		var next string
 		if i == pcd.stepIdx {
 			next = "next->"
 		}
-		fmt.Fprintf(pcd.Stdout, "%6s %2d. %s\n", next, i+1,
+		fmt.Printf("%6s %2d. %s\n", next, i+1,
 			strings.TrimSpace(step.Title))
 	}
 	fmt.Println()
@@ -218,11 +209,11 @@ func cmdNext(pcd *Procedure) error {
 		return fmt.Errorf("next: internal error: step index > len(steps)")
 	}
 	step := pcd.steps[pcd.stepIdx]
-	fmt.Fprintf(pcd.Stdout, "\n## (%d of %d) %s\n\n", pcd.stepIdx+1,
+	fmt.Printf("\n## (%d of %d) %s\n\n", pcd.stepIdx+1,
 		len(pcd.steps), strings.TrimSpace(step.Title))
 
 	// TODO replace line below and render Desc as template!
-	fmt.Fprintf(pcd.Stdout, "%s\n\n", strings.TrimSpace(step.Desc))
+	fmt.Printf("%s\n\n", strings.TrimSpace(step.Desc))
 
 	if err := step.Run(pcd.bag); err != nil {
 		return fmt.Errorf("next: %w", err)

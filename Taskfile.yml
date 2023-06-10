@@ -12,11 +12,6 @@ tasks:
     cmds:
       - mkdir -p bin
       - gotestsum -- -coverprofile=bin/coverage.out ./...
-      - task: lint
-
-  lint:
-    - forbidigo -set_exit_status
-    - cd expect && forbidigo -set_exit_status
 
   browser:
     cmds:
@@ -29,4 +24,3 @@ tasks:
   deps:
     cmds:
       - go install gotest.tools/gotestsum@latest
-      - go install github.com/ashanbrown/forbidigo@latest

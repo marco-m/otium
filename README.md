@@ -44,6 +44,14 @@ Write your own main and import this package.
 Run the program. It has a REPL with command completion and history, thanks
 to [peterh/liner]. Enter `?` or `<TAB>` twice to get started.
 
+## Design decisions
+
+- To test the interactive behavior, I wrote a minimal `expect` package, inspired
+  by the great [Expect Tcl].
+- Cannot inject `io.Reader`, `io.Writer` to ease testing because the REPL
+  library has hardcoded os.Stdin and os.Stdout. Instead, we use
+  `expect.NewFilePipe()` and swap `os.Stdin`, `os.Stdout` in each test.
+
 ## Credits
 
 The idea of `otium` comes from [danslimmon/donothing] at v0.2.0, which had the
@@ -57,3 +65,5 @@ missing support for running the user-provided automation functions.
 [danslimmon/donothing]: https://github.com/danslimmon/donothing
 
 [peterh/liner]: https://github.com/peterh/liner
+
+[Expect Tcl]: https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=821311
