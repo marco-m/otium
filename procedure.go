@@ -213,7 +213,9 @@ func cmdNext(pcd *Procedure) error {
 		len(pcd.steps), strings.TrimSpace(step.Title))
 
 	// TODO replace line below and render Desc as template!
-	fmt.Printf("%s\n\n", strings.TrimSpace(step.Desc))
+	if step.Desc != "" {
+		fmt.Printf("%s\n\n", strings.TrimSpace(step.Desc))
+	}
 
 	if err := step.Run(pcd.bag); err != nil {
 		return fmt.Errorf("next: %w", err)
