@@ -47,7 +47,8 @@ func (b *Bag) Get(key, desc string) (string, error) {
 	for {
 		fmt.Printf("(input)>> Enter %s (set %s <value>) or '?' for help\n",
 			desc, key)
-		line, err := b.linenoise.Prompt("(input)>> ")
+		line, err := b.linenoise.PromptWithSuggestion(
+			"(input)>> ", "set "+key+" ", -1)
 		if err != nil {
 			if err == io.EOF {
 				return "", io.EOF
