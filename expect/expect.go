@@ -1,9 +1,7 @@
 package expect
 
 import (
-	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -90,38 +88,38 @@ func NewFilePipe(timeout time.Duration, matchMax int) (
 // See
 // https://github.com/golang/go/issues/28790#issuecomment-438992014
 // https://go.dev/play/p/iGeuSFtebI-
-func bufferedPipe() {
-	var lines = []string{
-		"This is a test.",
-		"Or is it?",
-		"No one knows...",
-		"Hmmm...",
-		"I think I need more text.",
-		"Gosh darn it.",
-	}
-
-	rd, wr := io.Pipe()
-
-	go func() {
-		bufWr := bufio.NewWriterSize(wr, 64)
-		defer wr.Close()
-		defer bufWr.Flush()
-
-		for _, line := range lines {
-			fmt.Fprintln(bufWr, line)
-			//fmt.Printf("Buffer size: %v\n", bufWr.Buffered())
-		}
-	}()
-
-	s := bufio.NewScanner(rd)
-	for s.Scan() {
-		//fmt.Printf("%q\n", s.Text())
-		time.Sleep(time.Second)
-	}
-	if err := s.Err(); err != nil {
-		panic(err)
-	}
-}
+//func bufferedPipe() {
+//	var lines = []string{
+//		"This is a test.",
+//		"Or is it?",
+//		"No one knows...",
+//		"Hmmm...",
+//		"I think I need more text.",
+//		"Gosh darn it.",
+//	}
+//
+//	rd, wr := io.Pipe()
+//
+//	go func() {
+//		bufWr := bufio.NewWriterSize(wr, 64)
+//		defer wr.Close()
+//		defer bufWr.Flush()
+//
+//		for _, line := range lines {
+//			fmt.Fprintln(bufWr, line)
+//			//fmt.Printf("Buffer size: %v\n", bufWr.Buffered())
+//		}
+//	}()
+//
+//	s := bufio.NewScanner(rd)
+//	for s.Scan() {
+//		//fmt.Printf("%q\n", s.Text())
+//		time.Sleep(time.Second)
+//	}
+//	if err := s.Err(); err != nil {
+//		panic(err)
+//	}
+//}
 
 func (e *Expect) ExpectT(t *testing.T, re string) string {
 	t.Helper()
