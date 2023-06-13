@@ -16,14 +16,27 @@ type Bag struct {
 }
 
 // Get returns the value of key if key exists. If key doesn't exist, Get
-// interactively asks the user for it, prompting with desc.
-// NOTE: this means that Get is interactive and blocking. See the examples for
-// idiomatic usage.
+// interactively asks the user for it, prompting with desc, and stores key/val
+// in the bag.
+//
+// NOTE If key is not present, Get is interactive and blocking. See the
+// examples for idiomatic usage.
 func (b *Bag) Get(key, desc string) (string, error) {
+	return b.GetValidate(key, desc, func(k, v string) error { return nil })
+}
+
+type ValidatorFn func(key string, desc string) error
+
+// GetValidate returns the value of key if key exists. If key doesn't exist,
+// GetValidate interactively asks the user for it, prompting with desc, and,
+// if fn(key, val) returns true, stores key/val in the bag.
+//
+// NOTE If key is not present, Get is interactive and blocking. See the
+// examples for idiomatic usage.
+func (b *Bag) GetValidate(key, desc string, fn ValidatorFn) (string, error) {
 	if val, ok := b.bag[key]; ok {
 		return val, nil
 	}
-
 	//
 	// Configure completer.
 	//
@@ -82,6 +95,12 @@ func (b *Bag) Get(key, desc string) (string, error) {
 			if name != key {
 				fmt.Printf("set: wrong key: have %q; want %q\n", name, key)
 				continue
+			}
+			if fn != nil {
+				if err := fn(key, val); err != nil {
+					fmt.Println(err)
+					continue
+				}
 			}
 			b.bag[key] = val
 			return val, nil
