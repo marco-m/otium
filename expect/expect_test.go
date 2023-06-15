@@ -32,9 +32,8 @@ func TestExpectSuccess(t *testing.T) {
 		}
 		for _, want := range tc.want {
 			t.Run("re "+want.re, func(t *testing.T) {
-				out, err := sut.Expect(want.re)
+				have, err := sut.Expect(want.re)
 				assert.NilError(t, err)
-				have := string(out)
 				assert.Equal(t, have, want.out)
 			})
 		}
@@ -125,9 +124,8 @@ func TestExpectNoMatchEOF(t *testing.T) {
 			Reader:   strings.NewReader(tc.input),
 			MatchMax: tc.matchMax,
 		}
-		out, err := sut.Expect(tc.re)
+		have, err := sut.Expect(tc.re)
 		assert.ErrorIs(t, err, io.EOF)
-		have := string(out)
 		assert.Equal(t, have, tc.wantOut)
 	}
 
@@ -176,8 +174,7 @@ func TestExpectShortReadsMatch(t *testing.T) {
 		Reader:   fixed,
 		MatchMax: 5,
 	}
-	out, err := sut.Expect(`.*8`)
-	have := string(out)
+	have, err := sut.Expect(`.*8`)
 	assert.NilError(t, err, "buf: %s", have)
 	assert.Equal(t, have, "678")
 }
@@ -192,8 +189,7 @@ func TestExpectShortReadsNoMatch(t *testing.T) {
 		Reader:   fixed,
 		MatchMax: 5,
 	}
-	out, err := sut.Expect(`.*A`)
-	have := string(out)
+	have, err := sut.Expect(`.*A`)
 	assert.ErrorIs(t, err, io.EOF, "buf: %s", have)
 	assert.Equal(t, have, "6789")
 }
@@ -222,13 +218,18 @@ func TestExpectSimulateSutSuccess(t *testing.T) {
 		asyncErr <- err
 	}()
 
-	have1 := exp.ExpectT(t, `.*7`)
-	assert.Equal(t, have1, "1234567")
-	exp.SendT(t, "hello\n")
-	output2 := exp.ExpectT(t, `.*fa`)
-	assert.Equal(t, output2, "890cafefa")
+	have, err := exp.Expect(`.*7`)
+	assert.NilError(t, err)
+	assert.Equal(t, have, "1234567")
 
-	err := <-asyncErr
+	err = exp.Send("hello\n")
+	assert.NilError(t, err)
+
+	have, err = exp.Expect(`.*fa`)
+	assert.NilError(t, err)
+	assert.Equal(t, have, "890cafefa")
+
+	err = <-asyncErr
 	assert.NilError(t, err)
 }
 
@@ -250,9 +251,8 @@ func TestExpectSimulateSutTimeout(t *testing.T) {
 		asyncErr <- err
 	}()
 
-	out, err := exp.Expect(`.*HELLO`)
+	have, err := exp.Expect(`.*HELLO`)
 	assert.ErrorIs(t, err, expect.ErrTimeout)
-	have := string(out)
 	assert.Assert(t, strings.HasPrefix(have, "12345"), "have: %s", have)
 
 	_, err = exp.Drain()
@@ -299,13 +299,18 @@ func TestExpectSimulateSutOsPipeSuccess(t *testing.T) {
 		asyncErr <- err
 	}()
 
-	have1 := exp.ExpectT(t, `.*7`)
-	assert.Equal(t, have1, "1234567")
-	exp.SendT(t, "hello\n")
-	output2 := exp.ExpectT(t, `.*fa`)
-	assert.Equal(t, output2, "890cafefa")
+	have, err := exp.Expect(`.*7`)
+	assert.NilError(t, err)
+	assert.Equal(t, have, "1234567")
 
-	err := <-asyncErr
+	err = exp.Send("hello\n")
+	assert.NilError(t, err)
+
+	have, err = exp.Expect(`.*fa`)
+	assert.NilError(t, err)
+	assert.Equal(t, have, "890cafefa")
+
+	err = <-asyncErr
 	assert.NilError(t, err)
 }
 
@@ -340,9 +345,8 @@ func TestExpectSimulateSutOsPipeTimeout(t *testing.T) {
 		asyncErr <- err
 	}()
 
-	out, err := exp.Expect(`.*HELLO`)
+	have, err := exp.Expect(`.*HELLO`)
 	assert.ErrorIs(t, err, expect.ErrTimeout)
-	have := string(out)
 	assert.Assert(t, strings.HasPrefix(have, "12345"), "have: %s", have)
 
 	_, err = exp.Drain()

@@ -5,10 +5,7 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"testing"
 	"time"
-
-	"gotest.tools/v3/assert"
 )
 
 var ErrTimeout = errors.New("expect: timeout")
@@ -85,56 +82,7 @@ func NewFilePipe(timeout time.Duration, matchMax int) (
 	return stdinRd, stdoutWr, exp
 }
 
-// See
-// https://github.com/golang/go/issues/28790#issuecomment-438992014
-// https://go.dev/play/p/iGeuSFtebI-
-//func bufferedPipe() {
-//	var lines = []string{
-//		"This is a test.",
-//		"Or is it?",
-//		"No one knows...",
-//		"Hmmm...",
-//		"I think I need more text.",
-//		"Gosh darn it.",
-//	}
-//
-//	rd, wr := io.Pipe()
-//
-//	go func() {
-//		bufWr := bufio.NewWriterSize(wr, 64)
-//		defer wr.Close()
-//		defer bufWr.Flush()
-//
-//		for _, line := range lines {
-//			fmt.Fprintln(bufWr, line)
-//			//fmt.Printf("Buffer size: %v\n", bufWr.Buffered())
-//		}
-//	}()
-//
-//	s := bufio.NewScanner(rd)
-//	for s.Scan() {
-//		//fmt.Printf("%q\n", s.Text())
-//		time.Sleep(time.Second)
-//	}
-//	if err := s.Err(); err != nil {
-//		panic(err)
-//	}
-//}
-
-func (e *Expect) ExpectT(t *testing.T, re string) string {
-	t.Helper()
-	buf, err := e.Expect(re)
-	assert.NilError(t, err)
-	return string(buf)
-}
-
-func (e *Expect) SendT(t *testing.T, msg string) {
-	t.Helper()
-	_, err := e.Writer.Write([]byte(msg))
-	assert.NilError(t, err)
-}
-
-func (e *Expect) Expect(re string) ([]byte, error) {
+func (e *Expect) Expect(re string) (string, error) {
 	if e.MatchMax == 0 {
 		e.MatchMax = MatchMaxDef
 	}
@@ -150,7 +98,7 @@ func (e *Expect) Expect(re string) ([]byte, error) {
 
 	reg, err := regexp.Compile(re)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// We use a goroutine to avoid a blocking read. This does not happen for
@@ -174,7 +122,7 @@ func (e *Expect) Expect(re string) ([]byte, error) {
 		case <-timer.C:
 			// Timeout: return the buffer contents.
 			// FIXME This leaks the goroutine and the channel :-(
-			return e.buf[:e.offset], ErrTimeout
+			return string(e.buf[:e.offset]), ErrTimeout
 		case rInfo := <-readCh:
 			n, err = rInfo.n, rInfo.err
 			e.offset += n
@@ -190,7 +138,7 @@ func (e *Expect) Expect(re string) ([]byte, error) {
 					e.offset = 0
 				}
 				// Return the match.
-				return e.match[:iR-iL], nil
+				return string(e.match[:iR-iL]), nil
 			}
 			if e.offset == cap(e.buf) {
 				// Reached the end of the buf. Copy half for overlap and start
@@ -201,9 +149,15 @@ func (e *Expect) Expect(re string) ([]byte, error) {
 		}
 	}
 	// EOF or any other read error: return the buffer contents.
-	return e.buf[:e.offset+n], err
+	return string(e.buf[:e.offset+n]), err
 }
 
+func (e *Expect) Send(msg string) error {
+	_, err := e.Writer.Write([]byte(msg))
+	return err
+}
+
+// Drain reads and discards the Expect input until EOF or error.
 func (e *Expect) Drain() (int64, error) {
 	return io.Copy(io.Discard, e.Reader)
 }

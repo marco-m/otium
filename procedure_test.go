@@ -71,9 +71,8 @@ func TestProcedure_ExecuteOneStepWithEmptyRunSuccess(t *testing.T) {
 	}()
 
 	// (?s) = . matches also \n
-	out, err := exp.Expect(`(?s).*\(top\)>>.*\(top\)>> `)
-	have1 := string(out)
-	assert.NilError(t, err, "buf:\n%q", have1)
+	have, err := exp.Expect(`(?s).*\(top\)>>.*\(top\)>> `)
+	assert.NilError(t, err, "buf:\n%q", have)
 	want1 := `# Simple title
 
 Simple description
@@ -84,13 +83,13 @@ next->  1. step 1
 
 (top)>> Enter a command or '?' for help
 (top)>> `
-	assert.Equal(t, have1, want1)
+	assert.Equal(t, have, want1)
 
-	exp.SendT(t, "quit\n")
+	err = exp.Send("quit\n")
+	assert.NilError(t, err)
 
-	out2, err := exp.Expect(`.*fa`)
-	have2 := string(out2)
-	assert.ErrorIs(t, err, io.EOF, "buf:\n%q", have2)
+	have, err = exp.Expect(`.*fa`)
+	assert.ErrorIs(t, err, io.EOF, "buf:\n%q", have)
 
 	err = <-asyncErr
 	assert.ErrorIs(t, err, io.EOF)
