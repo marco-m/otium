@@ -2,14 +2,15 @@ package expect_test
 
 import (
 	"fmt"
-	"github.com/marco-m/otium/expect"
 	"io"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
-	"gotest.tools/v3/assert"
+	"github.com/go-quicktest/qt"
+
+	"github.com/marco-m/otium/expect"
 )
 
 func TestExpectSuccess(t *testing.T) {
@@ -25,7 +26,7 @@ func TestExpectSuccess(t *testing.T) {
 	}
 
 	run := func(t *testing.T, tc testCase) {
-		assert.Assert(t, len(tc.want) > 0)
+		qt.Assert(t, qt.IsTrue(len(tc.want) > 0))
 		sut := expect.Expect{
 			Reader:   strings.NewReader(tc.input),
 			MatchMax: tc.matchMax,
@@ -33,8 +34,8 @@ func TestExpectSuccess(t *testing.T) {
 		for _, want := range tc.want {
 			t.Run("re "+want.re, func(t *testing.T) {
 				have, err := sut.Expect(want.re)
-				assert.NilError(t, err)
-				assert.Equal(t, have, want.out)
+				qt.Assert(t, qt.IsNil(err))
+				qt.Assert(t, qt.Equals(have, want.out))
 			})
 		}
 	}
@@ -125,8 +126,8 @@ func TestExpectNoMatchEOF(t *testing.T) {
 			MatchMax: tc.matchMax,
 		}
 		have, err := sut.Expect(tc.re)
-		assert.ErrorIs(t, err, io.EOF)
-		assert.Equal(t, have, tc.wantOut)
+		qt.Assert(t, qt.ErrorIs(err, io.EOF))
+		qt.Assert(t, qt.Equals(have, tc.wantOut))
 	}
 
 	testCases := []testCase{
@@ -175,8 +176,8 @@ func TestExpectShortReadsMatch(t *testing.T) {
 		MatchMax: 5,
 	}
 	have, err := sut.Expect(`.*8`)
-	assert.NilError(t, err, "buf: %s", have)
-	assert.Equal(t, have, "678")
+	qt.Assert(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have, "678"))
 }
 
 func TestExpectShortReadsNoMatch(t *testing.T) {
@@ -190,8 +191,8 @@ func TestExpectShortReadsNoMatch(t *testing.T) {
 		MatchMax: 5,
 	}
 	have, err := sut.Expect(`.*A`)
-	assert.ErrorIs(t, err, io.EOF, "buf: %s", have)
-	assert.Equal(t, have, "6789")
+	qt.Assert(t, qt.ErrorIs(err, io.EOF))
+	qt.Assert(t, qt.Equals(have, "6789"))
 }
 
 func TestExpectSimulateSutSuccess(t *testing.T) {
@@ -219,18 +220,18 @@ func TestExpectSimulateSutSuccess(t *testing.T) {
 	}()
 
 	have, err := exp.Expect(`.*7`)
-	assert.NilError(t, err)
-	assert.Equal(t, have, "1234567")
+	qt.Assert(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have, "1234567"))
 
 	err = exp.Send("hello\n")
-	assert.NilError(t, err)
+	qt.Assert(t, qt.IsNil(err))
 
 	have, err = exp.Expect(`.*fa`)
-	assert.NilError(t, err)
-	assert.Equal(t, have, "890cafefa")
+	qt.Assert(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have, "890cafefa"))
 
 	err = <-asyncErr
-	assert.NilError(t, err)
+	qt.Assert(t, qt.IsNil(err))
 }
 
 func TestExpectSimulateSutTimeout(t *testing.T) {
@@ -252,14 +253,15 @@ func TestExpectSimulateSutTimeout(t *testing.T) {
 	}()
 
 	have, err := exp.Expect(`.*HELLO`)
-	assert.ErrorIs(t, err, expect.ErrTimeout)
-	assert.Assert(t, strings.HasPrefix(have, "12345"), "have: %s", have)
+	qt.Assert(t, qt.ErrorIs(err, expect.ErrTimeout))
+	qt.Assert(t, qt.IsTrue(strings.HasPrefix(have, "12345")),
+		qt.Commentf("have: %s", have))
 
 	_, err = exp.Drain()
-	assert.NilError(t, err)
+	qt.Assert(t, qt.IsNil(err))
 
 	err = <-asyncErr
-	assert.NilError(t, err)
+	qt.Assert(t, qt.IsNil(err))
 }
 
 func TestExpectSimulateSutOsPipeSuccess(t *testing.T) {
@@ -300,18 +302,18 @@ func TestExpectSimulateSutOsPipeSuccess(t *testing.T) {
 	}()
 
 	have, err := exp.Expect(`.*7`)
-	assert.NilError(t, err)
-	assert.Equal(t, have, "1234567")
+	qt.Assert(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have, "1234567"))
 
 	err = exp.Send("hello\n")
-	assert.NilError(t, err)
+	qt.Assert(t, qt.IsNil(err))
 
 	have, err = exp.Expect(`.*fa`)
-	assert.NilError(t, err)
-	assert.Equal(t, have, "890cafefa")
+	qt.Assert(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have, "890cafefa"))
 
 	err = <-asyncErr
-	assert.NilError(t, err)
+	qt.Assert(t, qt.IsNil(err))
 }
 
 func TestExpectSimulateSutOsPipeTimeout(t *testing.T) {
@@ -346,12 +348,13 @@ func TestExpectSimulateSutOsPipeTimeout(t *testing.T) {
 	}()
 
 	have, err := exp.Expect(`.*HELLO`)
-	assert.ErrorIs(t, err, expect.ErrTimeout)
-	assert.Assert(t, strings.HasPrefix(have, "12345"), "have: %s", have)
+	qt.Assert(t, qt.ErrorIs(err, expect.ErrTimeout))
+	qt.Assert(t, qt.IsTrue(strings.HasPrefix(have, "12345")),
+		qt.Commentf("have: %s", have))
 
 	_, err = exp.Drain()
-	assert.NilError(t, err)
+	qt.Assert(t, qt.IsNil(err))
 
 	err = <-asyncErr
-	assert.NilError(t, err)
+	qt.Assert(t, qt.IsNil(err))
 }
