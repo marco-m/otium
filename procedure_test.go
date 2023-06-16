@@ -105,7 +105,7 @@ next->  1. step 1
 	err = exp.Send("quit\n")
 	qt.Assert(t, qt.IsNil(err))
 
-	have, err = exp.Expect(`not existing`)
+	_, err = exp.Expect(`not existing`)
 	qt.Assert(t, qt.ErrorIs(err, io.EOF))
 	// FIXME TEST BROKEN qt.Assert(t, qt.Equals(have, ""))
 

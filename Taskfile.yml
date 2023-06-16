@@ -7,11 +7,16 @@ tasks:
     cmds:
       - task: test
       - task: build
+      - task: lint
 
   test:
     cmds:
       - mkdir -p bin
       - gotestsum -- -coverprofile=bin/coverage.out ./...
+
+  lint:
+    cmds:
+      - golangci-lint run
 
   browser:
     cmds:
