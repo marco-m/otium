@@ -34,9 +34,7 @@ Change directory to $HOME/tmp.
 
     chdir ~/tmp
 `,
-		Run: func(bag otium.Bag) error {
-			return nil
-		},
+		Run: func(bag otium.Bag) error { return nil },
 	})
 
 	pcd.AddStep(&otium.Step{

@@ -3,7 +3,20 @@ package otium
 
 import "errors"
 
-var errBack = errors.New("go back (sentinel)")
+var (
+	// ErrUnrecoverable tells the REPL to exit.
+	//
+	// From client code, use the %w verb of fmt.Errorf:
+	// 	func(bag otium.Bag) error {
+	//	    return fmt.Errorf("failed to X... %w", otium.ErrUnrecoverable)
+	//	},
+	ErrUnrecoverable = errors.New("(unrecoverable)")
+)
+
+// Internal errors and control flow.
+var (
+	errBack = errors.New("go back (sentinel)")
+)
 
 // RunFn is the function that automates a [Step]. When called, bag will contain
 // all the key/value pairs set by the previous steps. A typical RunFn will use

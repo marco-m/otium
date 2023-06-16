@@ -44,6 +44,34 @@ Write your own main and import this package.
 Run the program. It has a REPL with command completion and history, thanks
 to [peterh/liner]. Enter `?` or `<TAB>` twice to get started.
 
+## Returning an error from a step
+
+Sometimes an error is recoverable within the same execution, sometimes it is
+unrecoverable.
+
+If the error is recoverable, return an error as you please (wrapped or not),
+for example:
+
+```go
+pcd.AddStep(&otium.Step{
+    Run: func (bag otium.Bag) error {
+        ...
+        return fmt.Errorf("failed to X... %s", err)
+    },
+})
+```
+
+If the error is unrecoverable, use the `w` verb of `fmt.Errorf` (or equivalent):
+
+```go
+pcd.AddStep(&otium.Step{
+    Run: func (bag otium.Bag) error {
+        ...
+        return fmt.Errorf("failed to X... %w", otium.ErrUnrecoverable)
+    },
+})
+```
+
 ## Design decisions
 
 - To test the interactive behavior, I wrote a minimal `expect` package, inspired

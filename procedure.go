@@ -174,10 +174,7 @@ func (pcd *Procedure) Execute() error {
 		// Execute user command.
 		//
 		err = kongCtx.Run(&bind{pcd: pcd})
-		// FIXME: sometimes the error from a command (e.g. cmdNext) is
-		//  unrecoverable. In this case, we should exit the loop and return a
-		//  non-zero status code from the process...
-		if errors.Is(err, io.EOF) {
+		if errors.Is(err, io.EOF) || errors.Is(err, ErrUnrecoverable) {
 			return err
 		}
 		if errors.Is(err, errBack) {
@@ -218,7 +215,7 @@ func cmdNext(pcd *Procedure) error {
 	}
 
 	if err := step.Run(pcd.bag); err != nil {
-		return fmt.Errorf("next: %w", err)
+		return fmt.Errorf("step %d: %w", pcd.stepIdx+1, err)
 	}
 	pcd.stepIdx++
 
