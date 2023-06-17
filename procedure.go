@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -209,9 +210,12 @@ func cmdNext(pcd *Procedure) error {
 	fmt.Printf("\n## (%d of %d) %s\n\n", pcd.stepIdx+1,
 		len(pcd.steps), strings.TrimSpace(step.Title))
 
-	// TODO replace line below and render Desc as template!
 	if step.Desc != "" {
-		fmt.Printf("%s\n\n", strings.TrimSpace(step.Desc))
+		if err := render(os.Stdout, strings.TrimSpace(step.Desc),
+			pcd.bag); err != nil {
+			return fmt.Errorf("%s %w", err, ErrUnrecoverable)
+		}
+		fmt.Printf("\n\n")
 	}
 
 	if err := step.Run(pcd.bag); err != nil {

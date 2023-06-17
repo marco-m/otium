@@ -1,9 +1,12 @@
-- Find a way to pre-populate a subset of the bag with flags passed from the command-line! This would be cool but not so
+- add go template rendering of the keys in the bag, like donothing does
+- make the Run function optional? As-is, it can be annoying very fast for no 
+  gain
+- Find a way to pre-populate a subset of the bag with flags passed from the
+  command-line! This would be cool but not so
   easy since the code that populates the bag is in the user-provided Run function :-(, I cannot pre-run it!
   - On the other hand, maybe I can split the user-provided function in two:
   - Inputs()  this one sets the bag??? - so that I can pre-run it ???
   - Run()
-
 - the tests
   - TestProcedure_ExecuteOneStepRunSuccess
   - TestProcedure_ExecuteOneStepRunFailure

@@ -6,6 +6,7 @@ https://github.com/marco-m/otium
 
 ### New
 
+- step.Description: render bag values with Go template
 - bag: add GetValidate method
 - CI: add CI, build on https://cirrus-ci.org/
 - add ErrUnrecoverable (sentinel)

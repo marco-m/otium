@@ -44,6 +44,24 @@ Write your own main and import this package.
 Run the program. It has a REPL with command completion and history, thanks
 to [peterh/liner]. Enter `?` or `<TAB>` twice to get started.
 
+## Rendering bag values in the step description with Go template
+
+Assuming that the procedure bag contains the k/v `Name: Joe`, then
+
+```go
+pcd.AddStep(&otium.Step{
+    Desc: `Hello {{.Name}}!`
+})
+````
+
+will be rendered as:
+
+```
+Hello Joe!
+```
+
+This feature is inspired by [danslimmon/donothing].
+
 ## Returning an error from a step
 
 Sometimes an error is recoverable within the same execution, sometimes it is
