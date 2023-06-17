@@ -137,7 +137,7 @@ func (pcd *Procedure) Execute() error {
 			if !(strings.HasPrefix(cmd, "list") ||
 				strings.HasPrefix(cmd, "help") ||
 				strings.HasPrefix(cmd, "?")) {
-				printToc(pcd)
+				printNext(pcd)
 			}
 		}
 
@@ -199,6 +199,13 @@ func printToc(pcd *Procedure) {
 		fmt.Printf("%6s %2d. %s\n", next, i+1,
 			strings.TrimSpace(step.Title))
 	}
+	fmt.Println()
+}
+
+func printNext(pcd *Procedure) {
+	next := pcd.steps[pcd.stepIdx]
+	fmt.Printf("\n## Next step: %2d. %s\n", pcd.stepIdx+1,
+		strings.TrimSpace(next.Title))
 	fmt.Println()
 }
 
