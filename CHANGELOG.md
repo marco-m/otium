@@ -2,6 +2,12 @@
 
 https://github.com/marco-m/otium
 
+## v0.1.3 2023-06-18
+
+### New
+
+- new command `variables` to show the contents of the procedure bag
+
 ## Release v0.1.2 2023-06-17
 
 ### New

@@ -28,3 +28,13 @@ func cmdNext(pcd *Procedure) error {
 
 	return nil
 }
+
+func cmdVariables(pcd *Procedure) {
+	if len(pcd.bag.bag) == 0 {
+		fmt.Println("no variables")
+		return
+	}
+	for k, v := range pcd.bag.bag {
+		fmt.Printf("%s: %s\n", k, v)
+	}
+}

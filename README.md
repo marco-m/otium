@@ -42,7 +42,33 @@ See directory [examples](examples).
 Write your own main and import this package.
 
 Run the program. It has a REPL with command completion and history, thanks
-to [peterh/liner]. Enter `?` or `<TAB>` twice to get started.
+to [peterh/liner]. Enter `?` or `<TAB>` twice to get started:
+
+```
+(top)>> Enter a command or '?' for help
+(top)>> ?
+
+Commands:
+  help [<command> ...]
+    Show help.
+
+  repl
+    Show help for the REPL.
+
+  list
+    Show the list of steps.
+
+  next
+    Run the next step.
+
+  quit
+    Quit the program.
+
+  variables
+    List the variables.
+
+(top)>>
+```
 
 ## Rendering bag values in the step description with Go template
 
