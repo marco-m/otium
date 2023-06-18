@@ -16,12 +16,13 @@ var _ = kong.Must(&topcli{})
 
 // Top-level REPL commands.
 type topcli struct {
-	Help     helpCmd `cmd:"" help:"Show help."`
-	Question helpCmd `cmd:"" hidden:"" name:"?" help:"Show help."`
-	Repl     replCmd `cmd:"" help:"Show help for the REPL."`
-	List     listCmd `cmd:"" help:"Show the list of steps."`
-	Next     nextCmd `cmd:"" help:"Run the next step."`
-	Quit     quitCmd `cmd:"" help:"Quit the program"`
+	Help      helpCmd      `cmd:"" help:"Show help."`
+	Question  helpCmd      `cmd:"" hidden:"" name:"?" help:"Show help."`
+	Repl      replCmd      `cmd:"" help:"Show help for the REPL."`
+	List      listCmd      `cmd:"" help:"Show the list of steps."`
+	Next      nextCmd      `cmd:"" help:"Run the next step."`
+	Quit      quitCmd      `cmd:"" help:"Quit the program."`
+	Variables variablesCmd `cmd:"" help:"List the variables."`
 }
 
 type helpCmd struct {
@@ -83,4 +84,11 @@ type quitCmd struct{}
 func (q *quitCmd) Run(bind *bind) error {
 	// FIXME HACK USE PROPER ErrQuit sentinel instead!!!
 	return io.EOF
+}
+
+type variablesCmd struct{}
+
+func (q *variablesCmd) Run(bind *bind) error {
+	cmdVariables(bind.pcd)
+	return nil
 }

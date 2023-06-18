@@ -83,10 +83,12 @@ Simple description
 
 next->  1. step 1
 
+
+(top)>> Next step: (1) step 1
 (top)>> Enter a command or '?' for help
 (top)>> `
 	// Flag (?s) means that . matches also \n
-	have, err := exp.Expect(`(?s).*\(top\)>>.*\(top\)>> `)
+	have, err := exp.Expect(`(?s).*(\(top\)>>.*\n){2}\(top\)>> `)
 	qt.Assert(t, qt.IsNil(err))
 	qt.Assert(t, qt.Equals(have, want1))
 
