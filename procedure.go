@@ -131,22 +131,15 @@ func (pcd *Procedure) Execute() error {
 			return nil
 		}
 
-		// Look at last command.
-		if kongCtx != nil {
-			cmd := kongCtx.Command()
-			if !(strings.HasPrefix(cmd, "list") ||
-				strings.HasPrefix(cmd, "help") ||
-				strings.HasPrefix(cmd, "?")) {
-				printNext(pcd)
-			}
-		}
-
 		// We set the completer on each loop because the sub repl in bag.Get
 		// sets its own.
 		pcd.linenoise.SetCompleter(topCompleter)
 
-		var line string
+		next := pcd.steps[pcd.stepIdx]
+		fmt.Printf("\n(top)>> Next step: (%d) %s\n", pcd.stepIdx+1,
+			strings.TrimSpace(next.Title))
 		fmt.Printf("(top)>> Enter a command or '?' for help\n")
+		var line string
 		line, err := pcd.linenoise.Prompt("(top)>> ")
 		// TODO if we receive EOF, we should return no error if the procedure
 		//  has not started yet, and an error if the procedure has already
@@ -202,20 +195,12 @@ func printToc(pcd *Procedure) {
 	fmt.Println()
 }
 
-func printNext(pcd *Procedure) {
-	next := pcd.steps[pcd.stepIdx]
-	fmt.Printf("\n## Next step: %2d. %s\n", pcd.stepIdx+1,
-		strings.TrimSpace(next.Title))
-	fmt.Println()
-}
-
 func cmdNext(pcd *Procedure) error {
 	if pcd.stepIdx >= len(pcd.steps) {
 		return fmt.Errorf("next: internal error: step index > len(steps)")
 	}
 	step := pcd.steps[pcd.stepIdx]
-	fmt.Printf("\n## (%d of %d) %s\n\n", pcd.stepIdx+1,
-		len(pcd.steps), strings.TrimSpace(step.Title))
+	fmt.Printf("\n## (%d) %s\n\n", pcd.stepIdx+1, strings.TrimSpace(step.Title))
 
 	if step.Desc != "" {
 		if err := render(os.Stdout, strings.TrimSpace(step.Desc),
