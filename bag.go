@@ -113,6 +113,18 @@ func (b *Bag) GetValidate(key, desc string, fn ValidatorFn) (string, error) {
 	}
 }
 
+// GetNoAsk returns the value of key if key exists. If key doesn't exist,
+// GetNoAsk returns an error.
+//
+// NOTE If key is not present, GetNoAsk will not prompt the user.
+func (b *Bag) GetNoAsk(key string) (string, error) {
+	val, ok := b.bag[key]
+	if !ok {
+		return "", fmt.Errorf("key not found: %q", key)
+	}
+	return val, nil
+}
+
 // Put adds key/val to bag, overwriting val if key already exists.
 func (b *Bag) Put(key, val string) {
 	b.bag[key] = val

@@ -2,6 +2,12 @@
 
 https://github.com/marco-m/otium
 
+## v0.1.4 2023-06-20
+
+### New
+
+- bag: add GetNoAsk method
+
 ## v0.1.3 2023-06-18
 
 ### New
