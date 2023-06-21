@@ -1,3 +1,7 @@
+- does it make sense to have another prompt level, to which you can only 
+  answer "proceed (execute the step)" or "skip"? This somehow makes the flow 
+  less surprising when the step is _automated_, but risks also to become 
+  more annoying overall?
 - add go template rendering of the keys in the bag, like donothing does
 - make the Run function optional? As-is, it can be annoying very fast for no 
   gain
