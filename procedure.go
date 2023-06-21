@@ -27,12 +27,12 @@ type Procedure struct {
 
 // ProcedureOpts is used by [NewProcedure] to create a Procedure.
 type ProcedureOpts struct {
-	// Title is the name of the Procedure, shown at the beginning of the
-	// program.
-	Title string
-	// Desc is the summary of what the procedure is about, shown at the
-	// beginning of the program, just after the Title.
-	Desc string
+	// Text is the Markdown summary of what the procedure is about, shown at
+	// the beginning of the program.
+	//
+	// The first line is the title, must begin with "#" (markdown for document
+	// title) and must be separated from the rest of the text by a blank line.
+	Text string
 }
 
 // NewProcedure creates a Procedure.
@@ -107,8 +107,7 @@ func (pcd *Procedure) Execute() error {
 		return completions
 	}
 
-	fmt.Printf("# %s\n\n", pcd.Title)
-	fmt.Printf("%s\n", pcd.Desc)
+	fmt.Printf("%s\n", pcd.Text)
 	printToc(pcd)
 
 	//
@@ -173,12 +172,11 @@ func (pcd *Procedure) Execute() error {
 func (pcd *Procedure) validate() error {
 	var errs []error
 
-	pcd.Title = strings.TrimSpace(pcd.Title)
-	pcd.Desc = strings.TrimSpace(pcd.Desc)
+	pcd.Text = strings.TrimSpace(pcd.Text)
 
-	if pcd.Title == "" {
+	if pcd.Text == "" {
 		errs = append(errs,
-			errors.New("procedure has empty title"))
+			errors.New("procedure has empty Text"))
 	}
 	if len(pcd.steps) == 0 {
 		errs = append(errs,

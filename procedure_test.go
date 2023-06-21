@@ -15,8 +15,7 @@ import (
 
 func TestProcedure_ExecuteWithZeroStepsFails(t *testing.T) {
 	pcd := otium.NewProcedure(otium.ProcedureOpts{
-		Title: "Simple title",
-		Desc:  `Simple description`,
+		Text: "# Simple title",
 	})
 
 	err := pcd.Execute()
@@ -25,10 +24,9 @@ func TestProcedure_ExecuteWithZeroStepsFails(t *testing.T) {
 		"procedure has zero steps; want at least one"))
 }
 
-func TestProcedure_ExecuteStepWithMissingFieldsFails(t *testing.T) {
+func TestProcedure_ExecuteWithMissingFieldsFails(t *testing.T) {
 	pcd := otium.NewProcedure(otium.ProcedureOpts{
-		Title: "Simple title",
-		Desc:  `Simple description`,
+		Text: "",
 	})
 	pcd.AddStep(&otium.Step{
 		Title: "",
@@ -36,7 +34,8 @@ func TestProcedure_ExecuteStepWithMissingFieldsFails(t *testing.T) {
 
 	err := pcd.Execute()
 
-	qt.Assert(t, qt.ErrorMatches(err, `step \(1\) has empty Title`))
+	qt.Assert(t, qt.ErrorMatches(err,
+		`procedure has empty Text\nstep \(1\) has empty Title`))
 }
 
 func TestProcedure_ExecuteOneStepRunSuccess(t *testing.T) {
@@ -55,8 +54,7 @@ func TestProcedure_ExecuteOneStepRunSuccess(t *testing.T) {
 	}()
 
 	sut := otium.NewProcedure(otium.ProcedureOpts{
-		Title: "Simple title",
-		Desc:  `Simple description`,
+		Text: "# Simple title\n\nSimple description",
 	})
 	sut.AddStep(&otium.Step{
 		Title: "step 1",
@@ -128,7 +126,7 @@ func TestProcedure_ExecuteOneStepRunFailure(t *testing.T) {
 		os.Stdout = oldStdout
 	}()
 
-	sut := otium.NewProcedure(otium.ProcedureOpts{Title: "Simple title"})
+	sut := otium.NewProcedure(otium.ProcedureOpts{Text: "# Simple text"})
 	sut.AddStep(&otium.Step{
 		Title: "step 1",
 		Run: func(bag otium.Bag) error {

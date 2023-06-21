@@ -19,8 +19,9 @@ func main() {
 
 func run() error {
 	pcd := otium.NewProcedure(otium.ProcedureOpts{
-		Title: "Download a file and calculate its checksum",
-		Desc: `
+		Text: `
+# Download a file and calculate its checksum
+
 This is a silly example of how to use otium.
 
 To follow this example, you will need a separate terminal to invoke shell commands.

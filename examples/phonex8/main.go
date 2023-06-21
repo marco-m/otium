@@ -17,8 +17,9 @@ func main() {
 
 func run() error {
 	pcd := otium.NewProcedure(otium.ProcedureOpts{
-		Title: "The magic of 8",
-		Desc: `
+		Text: `
+# The magic of 8
+
 This procedure implements a little arithmetic trick involving some manipulation
 of the user's phone number.
 `})
