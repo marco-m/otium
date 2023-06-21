@@ -24,8 +24,7 @@ func run() error {
 This is a silly example of how to use otium.
 
 To follow this example, you will need a separate terminal to invoke shell commands.
-`,
-	})
+`})
 
 	pcd.AddStep(&otium.Step{
 		Title: "Change directory",
@@ -33,9 +32,7 @@ To follow this example, you will need a separate terminal to invoke shell comman
 Change directory to $HOME/tmp.
 
     chdir ~/tmp
-`,
-		Run: func(bag otium.Bag) error { return nil },
-	})
+`})
 
 	pcd.AddStep(&otium.Step{
 		Title: "Download a file",

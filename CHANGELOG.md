@@ -2,6 +2,12 @@
 
 https://github.com/marco-m/otium
 
+##  UNRELEASED v0.1.5
+
+### Changed
+
+- step: the Run user function is now optional
+
 ## v0.1.4 2023-06-20
 
 ### New

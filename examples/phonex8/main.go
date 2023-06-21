@@ -21,8 +21,7 @@ func run() error {
 		Desc: `
 This procedure implements a little arithmetic trick involving some manipulation
 of the user's phone number.
-`,
-	})
+`})
 
 	pcd.AddStep(&otium.Step{
 		Title: "Multiply your phone number by 8",

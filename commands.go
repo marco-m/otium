@@ -20,9 +20,10 @@ func cmdNext(pcd *Procedure) error {
 		}
 		fmt.Printf("\n\n")
 	}
-
-	if err := step.Run(pcd.bag); err != nil {
-		return fmt.Errorf("step %d: %w", pcd.stepIdx+1, err)
+	if step.Run != nil {
+		if err := step.Run(pcd.bag); err != nil {
+			return fmt.Errorf("step %d: %w", pcd.stepIdx+1, err)
+		}
 	}
 	pcd.stepIdx++
 

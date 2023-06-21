@@ -80,10 +80,6 @@ func (pcd *Procedure) Execute() error {
 			errs = append(errs,
 				fmt.Errorf("step (%d) has empty Title", i+1))
 		}
-		if step.Run == nil {
-			errs = append(errs,
-				fmt.Errorf("step (%d %s) misses Run function", i+1, step.Title))
-		}
 	}
 	if len(errs) > 0 {
 		return errors.Join(errs...)

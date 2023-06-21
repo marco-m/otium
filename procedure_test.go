@@ -32,13 +32,11 @@ func TestProcedure_ExecuteStepWithMissingFieldsFails(t *testing.T) {
 	})
 	pcd.AddStep(&otium.Step{
 		Title: "",
-		Run:   nil,
 	})
 
 	err := pcd.Execute()
 
-	qt.Assert(t, qt.ErrorMatches(err,
-		`step \(1\) has empty Title\nstep \(1 \) misses Run function`))
+	qt.Assert(t, qt.ErrorMatches(err, `step \(1\) has empty Title`))
 }
 
 func TestProcedure_ExecuteOneStepRunSuccess(t *testing.T) {
