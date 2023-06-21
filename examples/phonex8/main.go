@@ -25,8 +25,9 @@ of the user's phone number.
 `})
 
 	pcd.AddStep(&otium.Step{
-		Title: "Multiply your phone number by 8",
-		Desc: `
+		Text: `
+## Multiply your phone number by 8
+
 Treating your phone number ('PhoneNumber') as a single integer, multiply
 it by 8 ('PhoneNumberX8').
 `,

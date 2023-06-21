@@ -7,6 +7,7 @@ https://github.com/marco-m/otium
 ### Breaking
 
 - Procedure: merge fields Title and Desc into new field Text.
+- Step: merge fields Title and Desc into new field Text.
 
 ### Changed
 
