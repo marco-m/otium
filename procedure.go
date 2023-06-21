@@ -76,13 +76,11 @@ func (pcd *Procedure) Execute() error {
 
 	var errs []error
 	for i, step := range pcd.steps {
-		if strings.TrimSpace(step.Title) == "" {
-			errs = append(errs,
-				fmt.Errorf("step (%d) has empty Title", i+1))
-		}
+		errs = append(errs, step.validate(i+1))
 	}
-	if len(errs) > 0 {
-		return errors.Join(errs...)
+	err := errors.Join(errs...)
+	if err != nil {
+		return err
 	}
 
 	pcd.linenoise = liner.NewLiner()

@@ -1,5 +1,11 @@
 package otium
 
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
+
 // RunFn is the function that automates a [Step]. When called, bag will contain
 // all the key/value pairs set by the previous steps. A typical RunFn will use
 // [Bag.Get] to get a k/v and [Bag.Put] to put a k/v.
@@ -18,4 +24,15 @@ type Step struct {
 	// Run must still be non nil. In this case, it can be empty, but probably
 	// it should still ask for input. See [RunFn] for details.
 	Run RunFn
+}
+
+// validate checks that step is valid. Meant to be called by Procedure.Exec.
+func (step Step) validate(stepN int) error {
+	var errs []error
+
+	if strings.TrimSpace(step.Title) == "" {
+		errs = append(errs, fmt.Errorf("step (%d) has empty Title", stepN))
+	}
+
+	return errors.Join(errs...)
 }
