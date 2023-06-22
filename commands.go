@@ -14,7 +14,7 @@ func cmdNext(pcd *Procedure) error {
 	fmt.Printf("\n## (%d) %s\n\n", pcd.stepIdx+1, strings.TrimSpace(step.Title))
 
 	if step.Desc != "" {
-		if err := render(os.Stdout, strings.TrimSpace(step.Desc),
+		if err := renderTemplate(os.Stdout, strings.TrimSpace(step.Desc),
 			pcd.bag); err != nil {
 			return fmt.Errorf("%s %w", err, ErrUnrecoverable)
 		}

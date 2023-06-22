@@ -17,7 +17,7 @@ func TestRender(t *testing.T) {
 
 	run := func(t *testing.T, tc testCase) {
 		var buf bytes.Buffer
-		err := render(&buf, tc.text, Bag{bag: tc.bag})
+		err := renderTemplate(&buf, tc.text, Bag{bag: tc.bag})
 		qt.Assert(t, qt.IsNil(err))
 		qt.Assert(t, qt.Equals(buf.String(), tc.want))
 	}

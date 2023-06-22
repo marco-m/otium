@@ -5,7 +5,7 @@ import (
 	"text/template"
 )
 
-func render(wr io.Writer, text string, bag Bag) error {
+func renderTemplate(wr io.Writer, text string, bag Bag) error {
 	tmpl, err := template.New("description").Parse(text)
 	if err != nil {
 		return err
