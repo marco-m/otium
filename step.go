@@ -27,10 +27,13 @@ type Step struct {
 }
 
 // validate checks that step is valid. Meant to be called by Procedure.Exec.
-func (step Step) validate(stepN int) error {
+func (step *Step) validate(stepN int) error {
 	var errs []error
 
-	if strings.TrimSpace(step.Title) == "" {
+	step.Title = strings.TrimSpace(step.Title)
+	step.Desc = strings.TrimSpace(step.Desc)
+
+	if step.Title == "" {
 		errs = append(errs, fmt.Errorf("step (%d) has empty Title", stepN))
 	}
 

@@ -3,7 +3,6 @@ package otium
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 func cmdNext(pcd *Procedure) error {
@@ -11,11 +10,10 @@ func cmdNext(pcd *Procedure) error {
 		return fmt.Errorf("next: internal error: step index > len(steps)")
 	}
 	step := pcd.steps[pcd.stepIdx]
-	fmt.Printf("\n## (%d) %s\n\n", pcd.stepIdx+1, strings.TrimSpace(step.Title))
+	fmt.Printf("\n## (%d) %s\n\n", pcd.stepIdx+1, step.Title)
 
 	if step.Desc != "" {
-		if err := renderTemplate(os.Stdout, strings.TrimSpace(step.Desc),
-			pcd.bag); err != nil {
+		if err := renderTemplate(os.Stdout, step.Desc, pcd.bag); err != nil {
 			return fmt.Errorf("%s %w", err, ErrUnrecoverable)
 		}
 		fmt.Printf("\n\n")
