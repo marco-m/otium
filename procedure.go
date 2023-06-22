@@ -70,11 +70,8 @@ func (pcd *Procedure) AddStep(step *Step) {
 // If it returns an error, the user program should print it and exit with a
 // non-zero status code. See the examples for the suggested usage.
 func (pcd *Procedure) Execute() error {
-	if len(pcd.steps) == 0 {
-		return errors.New("procedure has zero steps; want at least one")
-	}
-
 	var errs []error
+	errs = append(errs, pcd.validate())
 	for i, step := range pcd.steps {
 		errs = append(errs, step.validate(i+1))
 	}
@@ -110,8 +107,8 @@ func (pcd *Procedure) Execute() error {
 		return completions
 	}
 
-	fmt.Printf("# %s\n\n", strings.TrimSpace(pcd.Title))
-	fmt.Printf("%s\n", strings.TrimSpace(pcd.Desc))
+	fmt.Printf("# %s\n\n", pcd.Title)
+	fmt.Printf("%s\n", pcd.Desc)
 	printToc(pcd)
 
 	//
@@ -129,8 +126,7 @@ func (pcd *Procedure) Execute() error {
 		pcd.linenoise.SetCompleter(topCompleter)
 
 		next := pcd.steps[pcd.stepIdx]
-		fmt.Printf("\n(top)>> Next step: (%d) %s\n", pcd.stepIdx+1,
-			strings.TrimSpace(next.Title))
+		fmt.Printf("\n(top)>> Next step: (%d) %s\n", pcd.stepIdx+1, next.Title)
 		fmt.Printf("(top)>> Enter a command or '?' for help\n")
 		var line string
 		line, err := pcd.linenoise.Prompt("(top)>> ")
@@ -174,6 +170,24 @@ func (pcd *Procedure) Execute() error {
 	}
 }
 
+func (pcd *Procedure) validate() error {
+	var errs []error
+
+	pcd.Title = strings.TrimSpace(pcd.Title)
+	pcd.Desc = strings.TrimSpace(pcd.Desc)
+
+	if pcd.Title == "" {
+		errs = append(errs,
+			errors.New("procedure has empty title"))
+	}
+	if len(pcd.steps) == 0 {
+		errs = append(errs,
+			errors.New("procedure has zero steps; want at least one"))
+	}
+
+	return errors.Join(errs...)
+}
+
 // Table of contents
 func printToc(pcd *Procedure) {
 	fmt.Printf("\n## Table of contents\n\n")
@@ -182,8 +196,7 @@ func printToc(pcd *Procedure) {
 		if i == pcd.stepIdx {
 			next = "next->"
 		}
-		fmt.Printf("%6s %2d. %s\n", next, i+1,
-			strings.TrimSpace(step.Title))
+		fmt.Printf("%6s %2d. %s\n", next, i+1, step.Title)
 	}
 	fmt.Println()
 }
