@@ -10,7 +10,9 @@ func cmdNext(pcd *Procedure) error {
 		return fmt.Errorf("next: internal error: step index > len(steps)")
 	}
 	step := pcd.steps[pcd.stepIdx]
-	fmt.Printf("\n## (%d) %s\n\n", pcd.stepIdx+1, step.Title)
+	out, _ := pcd.glam.Render(fmt.Sprintf("## %d. %s", pcd.stepIdx+1,
+		step.Title))
+	fmt.Print(out)
 
 	if step.Desc != "" {
 		if err := renderTemplate(os.Stdout, step.Desc, pcd.bag); err != nil {
