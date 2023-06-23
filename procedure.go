@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
+	"github.com/charmbracelet/glamour"
 	"github.com/google/shlex"
 	"github.com/peterh/liner"
 )
@@ -18,11 +19,11 @@ type Procedure struct {
 	ProcedureOpts
 	steps []*Step
 	// Index into the step to execute.
-	stepIdx int
-	bag     Bag
-	parser  *kong.Kong
-	// Warning: will be initialized by Execute(), not by NewProcedure().
-	linenoise *liner.State
+	stepIdx   int
+	bag       Bag
+	parser    *kong.Kong
+	glam      *glamour.TermRenderer // Will be initialized by Execute()
+	linenoise *liner.State          // Will be initialized by Execute()
 }
 
 // ProcedureOpts is used by [NewProcedure] to create a Procedure.
@@ -70,12 +71,21 @@ func (pcd *Procedure) AddStep(step *Step) {
 // If it returns an error, the user program should print it and exit with a
 // non-zero status code. See the examples for the suggested usage.
 func (pcd *Procedure) Execute() error {
+	var err error
+	pcd.glam, err = glamour.NewTermRenderer(
+		// detect bg color and pick either the default dark or light theme
+		glamour.WithAutoStyle(),
+	)
+	if err != nil {
+		return err
+	}
+
 	var errs []error
 	errs = append(errs, pcd.validate())
 	for i, step := range pcd.steps {
 		errs = append(errs, step.validate(i+1))
 	}
-	err := errors.Join(errs...)
+	err = errors.Join(errs...)
 	if err != nil {
 		return err
 	}
@@ -107,8 +117,8 @@ func (pcd *Procedure) Execute() error {
 		return completions
 	}
 
-	fmt.Printf("# %s\n\n", pcd.Title)
-	fmt.Printf("%s\n", pcd.Desc)
+	fmt.Printf("%s", pcd.Title)
+	fmt.Printf("%s", pcd.Desc)
 	printToc(pcd)
 
 	//
@@ -171,18 +181,21 @@ func (pcd *Procedure) Execute() error {
 }
 
 func (pcd *Procedure) validate() error {
+	var err error
 	var errs []error
 
-	pcd.Title = strings.TrimSpace(pcd.Title)
-	pcd.Desc = strings.TrimSpace(pcd.Desc)
+	pcd.Title, err = pcd.glam.Render(fmt.Sprintf("# %s",
+		strings.TrimSpace(pcd.Title)))
+	errs = append(errs, err)
+
+	pcd.Desc, err = pcd.glam.Render(strings.TrimSpace(pcd.Desc))
+	errs = append(errs, err)
 
 	if pcd.Title == "" {
-		errs = append(errs,
-			errors.New("procedure has empty title"))
+		errs = append(errs, errors.New("procedure must have a title"))
 	}
 	if len(pcd.steps) == 0 {
-		errs = append(errs,
-			errors.New("procedure has zero steps; want at least one"))
+		errs = append(errs, errors.New("procedure must have at least one step"))
 	}
 
 	return errors.Join(errs...)
@@ -190,7 +203,8 @@ func (pcd *Procedure) validate() error {
 
 // Table of contents
 func printToc(pcd *Procedure) {
-	fmt.Printf("\n## Table of contents\n\n")
+	toc, _ := pcd.glam.Render("## Table of contents")
+	fmt.Printf(toc)
 	for i, step := range pcd.steps {
 		var next string
 		if i == pcd.stepIdx {
