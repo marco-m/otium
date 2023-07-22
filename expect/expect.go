@@ -31,9 +31,9 @@ type Expect struct {
 }
 
 // New returns stdin as io.PipeReader, stdout as io.PipeWriter, and expect.
-// Once stdin and stdout are replaced in the SUT, expect and send can be
+// Once stdin and stdout are replaced in the SUT, Expect and Send can be
 // used by the test to communicate with the SUT.
-// If the timeout expires, the next expect or send will fail the test.
+// If the timeout expires, the next call to Expect or Send will fail the test.
 // Note that communication is blocking, so the test must run the SUT in a
 // goroutine.
 func New(timeout time.Duration, matchMax int) (

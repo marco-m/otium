@@ -30,13 +30,98 @@ func TestProcedure_ExecuteStepWithMissingFieldsFails(t *testing.T) {
 		Title: "Simple title",
 		Desc:  `Simple description`,
 	})
-	pcd.AddStep(&otium.Step{
-		Title: "",
-	})
+	pcd.AddStep(&otium.Step{Title: ""})
 
 	err := pcd.Execute()
 
 	qt.Assert(t, qt.ErrorMatches(err, `step \(1\) has empty Title`))
+}
+
+func TestProcedure_ExecuteDuplicateVarsInSameStepFail(t *testing.T) {
+	pcd := otium.NewProcedure(otium.ProcedureOpts{
+		Title: "Simple title",
+		Desc:  `Simple description`,
+	})
+	const key = "fruit"
+	pcd.AddStep(&otium.Step{
+		Title: "Step A",
+		Vars: []otium.Variable{
+			{Name: key},
+			{Name: key},
+		},
+	})
+
+	err := pcd.Execute()
+
+	qt.Assert(t, qt.ErrorMatches(err, `step "Step A": duplicate var "fruit"`))
+}
+
+func TestProcedure_ExecuteDuplicateVarsInDifferentStepsFail(t *testing.T) {
+	pcd := otium.NewProcedure(otium.ProcedureOpts{
+		Title: "Simple title",
+		Desc:  `Simple description`,
+	})
+	pcd.AddStep(&otium.Step{
+		Title: "Step A",
+		Vars:  []otium.Variable{{Name: "fruit"}},
+	})
+	pcd.AddStep(&otium.Step{
+		Title: "Step B",
+		Vars:  []otium.Variable{{Name: "fruit"}},
+	})
+
+	err := pcd.Execute()
+
+	qt.Assert(t, qt.ErrorMatches(err, `step "Step B": duplicate var "fruit"`))
+}
+
+func TestProcedure_ExecuteOneStepNoRunWithVarFromCLI(t *testing.T) {
+	exp, cleanup := expect.NewFilePipe(100*time.Millisecond, expect.MatchMaxDef)
+	defer cleanup()
+
+	sut := otium.NewProcedure(otium.ProcedureOpts{
+		Title: "Simple title",
+		Desc:  `Simple description`,
+	})
+	sut.AddStep(&otium.Step{
+		Title: "step 1",
+		Vars:  []otium.Variable{{Name: "fruit"}},
+	})
+
+	asyncErr := make(chan error)
+	go func() {
+		os.Args = []string{"exe.name", "--fruit=mango"}
+		err := sut.Execute()
+		os.Stdout.Close()
+		asyncErr <- err
+	}()
+
+	want1 := `# Simple title
+
+Simple description
+
+## Table of contents
+
+next->  1. 🤠 step 1
+
+
+(top)>> Next step: 1. 🤠 step 1
+(top)>> Enter a command or '?' for help
+(top)>> `
+	// Flag (?s) means that . matches also \n
+	have, err := exp.Expect(`(?s).*(\(top\)>>.*\n){2}\(top\)>> `)
+	qt.Assert(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have, want1))
+
+	err = exp.Send("next\n")
+	qt.Assert(t, qt.IsNil(err))
+
+	have, err = exp.Expect(`.*terminated successfully`)
+	qt.Assert(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have, "(top)>> Procedure terminated successfully"))
+
+	err = <-asyncErr
+	qt.Assert(t, qt.IsNil(err))
 }
 
 func TestProcedure_ExecuteOneStepWithRunSuccess(t *testing.T) {
@@ -68,10 +153,10 @@ Simple description
 
 ## Table of contents
 
-next->  1. step 1
+next->  1. 🤖 step 1
 
 
-(top)>> Next step: (1) step 1
+(top)>> Next step: 1. 🤖 step 1
 (top)>> Enter a command or '?' for help
 (top)>> `
 	// Flag (?s) means that . matches also \n

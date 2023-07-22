@@ -12,9 +12,9 @@ Instead of reading the document, you run the skeleton, which guides you
 step-by-step through the whole procedure. It is a simple REPL that gathers
 inputs from you and passes them to the subsequent steps.
 
-When you have time and enough experience from proceeding manually, you automate
-one step. When you have some more time, you automate another step, thus
-incrementally automating the whole procedure over time.
+When you have time and enough experience from proceeding manually (🤠), you
+automate (🤖) one step. When you have some more time, you automate another
+step, thus incrementally automating the whole procedure over time.
 
 ## Scope
 
@@ -72,11 +72,11 @@ Commands:
 
 ## Rendering bag values in the step description with Go template
 
-Assuming that the procedure bag contains the k/v `Name: Joe`, then
+Assuming that the procedure bag contains the k/v `name: Joe`, then
 
 ```go
 pcd.AddStep(&otium.Step{
-    Desc: `Hello {{.Name}}!`
+    Desc: `Hello {{.name}}!`
 })
 ````
 
@@ -87,6 +87,51 @@ Hello Joe!
 ```
 
 This feature is inspired by [danslimmon/donothing].
+
+## Setting a bag value from the command line
+
+Sometimes you know beforehand some of the variables that the procedure steps
+will ask. In those cases, it can be simpler to pass them as command-line flags,
+instead of waiting to be prompted for them.
+
+All the bag variables declared in a step are automatically made available as
+command-line flags. If present, the same validation function is used when
+parsing the command-line and when parsing the REPL input:
+
+```go
+pcd.AddStep(&otium.Step{
+    Title: "...",
+    Desc: `...`,
+    Vars: []otium.Variable{
+        {
+            Name: "fruit",
+            Desc: "Fruit for breakfast",
+            Fn: func(val string) error {
+                basket := []string{"banana", "mango"}
+                if !slices.Contains(basket, val) {
+                    return fmt.Errorf("we only have %s", basket)
+                }
+                return nil
+            },
+        },
+        {Name: "amount", Desc: "How many pieces of fruit"},
+    },
+```
+
+Invoking help:
+```
+$ go run ./examples/cliflags -h
+cliflags: Example showing command-line flags.
+This program is based on otium dev, a simple incremental automation system (https://github.com/marco-m/otium)
+
+Usage of cliflags:
+  -amount value
+        How many pieces of fruit
+  -fruit value
+        Fruit for breakfast
+```
+
+See [examples/cliflags](examples/cliflags/cliflags.go).
 
 ## Returning an error from a step
 

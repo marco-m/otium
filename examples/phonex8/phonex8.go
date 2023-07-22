@@ -10,7 +10,7 @@ import (
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Println(err)
+		fmt.Println("error:", err)
 		os.Exit(1)
 	}
 }
@@ -29,17 +29,9 @@ of the user's phone number.
 Treating your phone number ('PhoneNumber') as a single integer, multiply
 it by 8 ('PhoneNumberX8').
 `,
-		Run: func(bag otium.Bag) error {
-			// This user input is needed also when step is automated.
-			if _, err := bag.Get("PhoneNumber", "your phone number"); err != nil {
-				return err
-			}
-			// This user input is needed only until the step is automated.
-			if _, err := bag.Get("PhoneNumberX8", "the result"); err != nil {
-				return err
-			}
-
-			return nil
+		Vars: []otium.Variable{
+			{Name: "PhoneNumber", Desc: "your phone number"},
+			{Name: "PhoneNumberX8", Desc: "the result"},
 		},
 		//Run: func(bag otium.Bag) error {
 		//	// FIXME this conversion should go in the otium loop!
@@ -72,17 +64,9 @@ B. 'SumPhoneNumberX8': add up all the digits in 'PhoneNumberX8', and then add
    If the sum has more than one digit, take that sum and add up its digits.
    Repeat until there's a single digit left. That digit should be 8.  
 `,
-		Run: func(bag otium.Bag) error {
-			// This user input is needed only until the step is automated.
-			if _, err := bag.Get("SumPhoneNumber", "the result of A"); err != nil {
-				return err
-			}
-			// This user input is needed only until the step is automated.
-			if _, err := bag.Get("SumPhoneNumberX8", "the result of B"); err != nil {
-				return err
-			}
-
-			return nil
+		Vars: []otium.Variable{
+			{Name: "SumPhoneNumber", Desc: "the result of A"},
+			{Name: "SumPhoneNumberX8", Desc: "the result of B"},
 		},
 	})
 

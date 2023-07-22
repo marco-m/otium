@@ -2,8 +2,11 @@ package otium
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -16,22 +19,22 @@ import (
 // [Procedure.Execute].
 type Procedure struct {
 	ProcedureOpts
-	steps []*Step
-	// Index into the step to execute.
-	stepIdx int
+	steps   []*Step
+	stepIdx int // Index into the step to execute.
 	bag     Bag
 	parser  *kong.Kong
-	// Warning: will be initialized by Execute(), not by NewProcedure().
-	linenoise *liner.State
+	// Warning: term will be initialized by Execute(), not by NewProcedure().
+	term *liner.State
 }
 
 // ProcedureOpts is used by [NewProcedure] to create a Procedure.
 type ProcedureOpts struct {
-	// Title is the name of the Procedure, shown at the beginning of the
-	// program.
+	// Name is the name of the Procedure; by default it is the name of the executable.
+	Name string
+	// Title is the title of the Procedure, shown at the beginning of the program.
 	Title string
-	// Desc is the summary of what the procedure is about, shown at the
-	// beginning of the program, just after the Title.
+	// Desc is the summary of what the procedure is about, shown at the beginning of
+	// the program, just after the Title.
 	Desc string
 }
 
@@ -39,15 +42,11 @@ type ProcedureOpts struct {
 func NewProcedure(opts ProcedureOpts) *Procedure {
 	pcd := &Procedure{
 		ProcedureOpts: opts,
-		bag:           Bag{bag: make(map[string]string)},
 	}
-
-	description := "otium v0.0.0"
+	pcd.bag = NewBag()
 
 	pcd.parser = kong.Must(&topcli{},
 		kong.Name(""),
-		kong.Description(
-			description+" -- a simple incremental automation system (https://github.com/marco-m/otium)"),
 		kong.Exit(func(int) {}),
 		kong.ConfigureHelp(kong.HelpOptions{
 			// Must be disabled because it doesn't make sense in a REPL.
@@ -75,22 +74,68 @@ func (pcd *Procedure) Execute() error {
 	for i, step := range pcd.steps {
 		errs = append(errs, step.validate(i+1))
 	}
-	err := errors.Join(errs...)
-	if err != nil {
+	if err := errors.Join(errs...); err != nil {
 		return err
 	}
 
-	pcd.linenoise = liner.NewLiner()
+	// Fill the bag with all the Vars from all the steps.
+	// A duplicate variable is considered an error.
+	for _, step := range pcd.steps {
+		for _, variable := range step.Vars {
+			if variable.Fn == nil {
+				variable.Fn = func(string) error { return nil }
+			}
+			// Detect duplicates.
+			if _, ok := pcd.bag.bag[variable.Name]; ok {
+				err := fmt.Errorf("step %q: duplicate var %q", step.Title, variable.Name)
+				errs = append(errs, err)
+				continue
+			}
+			pcd.bag.bag[variable.Name] = variable
+		}
+	}
+	if err := errors.Join(errs...); err != nil {
+		return err
+	}
+
+	// Add the Vars in the bag as CLI flags.
+	for name, variable := range pcd.bag.bag {
+		name, variable := name, variable // avoid loop capture :-(
+		flag.Func(name, variable.Desc,
+			func(val string) error {
+				if err := variable.Fn(val); err != nil {
+					return err
+				}
+				pcd.bag.Put(name, val)
+				return nil
+			})
+	}
+
+	// Parse the command-line.
+	flag.Usage = func() {
+		out := flag.CommandLine.Output()
+		fmt.Fprintf(out, "%s: %s.\n", pcd.Name, pcd.Title)
+		fmt.Fprintf(out,
+			"This program is based on otium %s, a simple incremental automation system (https://github.com/marco-m/otium)\n",
+			version)
+		fmt.Fprintf(out, "\nUsage of %s:\n", pcd.Name)
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	// We cannot initialize liner before (say, in NewProcedure), because
+	// NewLiner changes the terminal line discipline, so we must do this
+	// _after_ having parsed the command-line.
+	pcd.term = liner.NewLiner()
 	// Restore terminal to previous mode, super important.
-	defer pcd.linenoise.Close()
-	pcd.bag.linenoise = pcd.linenoise
-	pcd.linenoise.SetCtrlCAborts(true)
+	defer pcd.term.Close()
+	pcd.term.SetCtrlCAborts(true)
 
 	//
 	// Configure completer, part 1.
 	// TODO think how to make it know deeper about the possible completions...
 	//
-	pcd.linenoise.SetTabCompletionStyle(liner.TabPrints)
+	pcd.term.SetTabCompletionStyle(liner.TabPrints)
 	var commands []string
 	for _, node := range pcd.parser.Model.Children {
 		commands = append(commands, node.Name)
@@ -123,13 +168,14 @@ func (pcd *Procedure) Execute() error {
 
 		// We set the completer on each loop because the sub repl in bag.Get
 		// sets its own.
-		pcd.linenoise.SetCompleter(topCompleter)
+		pcd.term.SetCompleter(topCompleter)
 
 		next := pcd.steps[pcd.stepIdx]
-		fmt.Printf("\n(top)>> Next step: (%d) %s\n", pcd.stepIdx+1, next.Title)
+		fmt.Printf("\n(top)>> Next step: %d. %s %s\n",
+			pcd.stepIdx+1, next.Icon(), next.Title)
 		fmt.Printf("(top)>> Enter a command or '?' for help\n")
 		var line string
-		line, err := pcd.linenoise.Prompt("(top)>> ")
+		line, err := pcd.term.Prompt("(top)>> ")
 		// TODO if we receive EOF, we should return no error if the procedure
 		//  has not started yet, and an error if the procedure has already
 		//  started
@@ -151,7 +197,7 @@ func (pcd *Procedure) Execute() error {
 			pcd.parser.Errorf("%s", err)
 			continue
 		}
-		pcd.linenoise.AppendHistory(line)
+		pcd.term.AppendHistory(line)
 
 		//
 		// Execute user command.
@@ -170,9 +216,16 @@ func (pcd *Procedure) Execute() error {
 	}
 }
 
+func (pcd *Procedure) Put(key, val string) {
+	pcd.bag.Put(key, val)
+}
+
 func (pcd *Procedure) validate() error {
 	var errs []error
 
+	if pcd.Name == "" {
+		_, pcd.Name = filepath.Split(os.Args[0])
+	}
 	pcd.Title = strings.TrimSpace(pcd.Title)
 	pcd.Desc = strings.TrimSpace(pcd.Desc)
 
@@ -196,7 +249,7 @@ func printToc(pcd *Procedure) {
 		if i == pcd.stepIdx {
 			next = "next->"
 		}
-		fmt.Printf("%6s %2d. %s\n", next, i+1, step.Title)
+		fmt.Printf("%6s %2d. %s %s\n", next, i+1, step.Icon(), step.Title)
 	}
 	fmt.Println()
 }
