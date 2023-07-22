@@ -39,20 +39,9 @@ func TestProcedure_ExecuteStepWithMissingFieldsFails(t *testing.T) {
 	qt.Assert(t, qt.ErrorMatches(err, `step \(1\) has empty Title`))
 }
 
-func TestProcedure_ExecuteOneStepRunSuccess(t *testing.T) {
-	stdin, stdout, exp := expect.NewFilePipe(100*time.Millisecond,
-		expect.MatchMaxDef)
-
-	// Due to the REPL library, we must swap os.Stdin and os.Stdout
-
-	oldStdin := os.Stdin
-	os.Stdin = stdin
-	oldStdout := os.Stdout
-	os.Stdout = stdout
-	defer func() {
-		os.Stdin = oldStdin
-		os.Stdout = oldStdout
-	}()
+func TestProcedure_ExecuteOneStepWithRunSuccess(t *testing.T) {
+	exp, cleanup := expect.NewFilePipe(100*time.Millisecond, expect.MatchMaxDef)
+	defer cleanup()
 
 	sut := otium.NewProcedure(otium.ProcedureOpts{
 		Title: "Simple title",
@@ -69,7 +58,7 @@ func TestProcedure_ExecuteOneStepRunSuccess(t *testing.T) {
 	asyncErr := make(chan error)
 	go func() {
 		err := sut.Execute()
-		stdout.Close()
+		os.Stdout.Close()
 		asyncErr <- err
 	}()
 
@@ -113,20 +102,10 @@ next->  1. step 1
 	qt.Assert(t, qt.IsNil(err))
 }
 
-func TestProcedure_ExecuteOneStepRunFailure(t *testing.T) {
-	stdin, stdout, exp := expect.NewFilePipe(100*time.Millisecond,
+func TestProcedure_ExecuteOneStepWithRunFailure(t *testing.T) {
+	exp, cleanup := expect.NewFilePipe(100*time.Millisecond,
 		expect.MatchMaxDef)
-
-	// Due to the REPL library, we must swap os.Stdin and os.Stdout
-
-	oldStdin := os.Stdin
-	os.Stdin = stdin
-	oldStdout := os.Stdout
-	os.Stdout = stdout
-	defer func() {
-		os.Stdin = oldStdin
-		os.Stdout = oldStdout
-	}()
+	defer cleanup()
 
 	sut := otium.NewProcedure(otium.ProcedureOpts{Title: "Simple title"})
 	sut.AddStep(&otium.Step{
@@ -139,7 +118,7 @@ func TestProcedure_ExecuteOneStepRunFailure(t *testing.T) {
 	asyncErr := make(chan error)
 	go func() {
 		err := sut.Execute()
-		stdout.Close()
+		os.Stdout.Close()
 		asyncErr <- err
 	}()
 
