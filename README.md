@@ -70,24 +70,6 @@ Commands:
 (top)>>
 ```
 
-## Rendering bag values in the step description with Go template
-
-Assuming that the procedure bag contains the k/v `name: Joe`, then
-
-```go
-pcd.AddStep(&otium.Step{
-    Desc: `Hello {{.name}}!`
-})
-````
-
-will be rendered as:
-
-```
-Hello Joe!
-```
-
-This feature is inspired by [danslimmon/donothing].
-
 ## Setting a bag value from the command line
 
 Sometimes you know beforehand some of the variables that the procedure steps
@@ -132,6 +114,42 @@ Usage of cliflags:
 ```
 
 See [examples/cliflags](examples/cliflags/cliflags.go).
+
+## Understanding if a step is automated or manual
+
+- Manual steps are marked as a human with 🤠
+- Automated steps are marked as a bot with 🤖
+
+Example:
+
+```
+go run ./examples/cliflags
+
+# Example showing command-line flags
+
+## Table of contents
+
+next->  1. 🤠 Introduction
+        2. 🤖 Two variables
+```
+
+## Rendering bag values in the step description with Go template
+
+Assuming that the procedure bag contains the k/v `name: Joe`, then
+
+```go
+pcd.AddStep(&otium.Step{
+    Desc: `Hello {{.name}}!`
+})
+````
+
+will be rendered as:
+
+```
+Hello Joe!
+```
+
+This feature is inspired by [danslimmon/donothing].
 
 ## Returning an error from a step
 
