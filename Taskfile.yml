@@ -6,7 +6,7 @@ tasks:
   default:
     cmds:
       - task: test
-      - task: build
+      - task: smoke
       - task: lint
 
   test:
@@ -22,9 +22,11 @@ tasks:
     cmds:
       - go tool cover -html=bin/coverage.out
 
-  build:
+  smoke:
     cmds:
-      - go build ./...
+      - go run ./examples/cliflags -h
+      - go run ./examples/download -h
+      - go run ./examples/phonex8 -h
 
   deps:
     cmds:
