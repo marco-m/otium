@@ -15,5 +15,6 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
+	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 )

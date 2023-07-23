@@ -6,13 +6,14 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/marco-m/otium"
 )
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Println(err)
+		fmt.Println("error:", err)
 		os.Exit(1)
 	}
 }
@@ -27,31 +28,40 @@ To follow this example, you will need a separate terminal to invoke shell comman
 `})
 
 	pcd.AddStep(&otium.Step{
-		Title: "Change directory",
+		Title: "Collect inputs",
 		Desc: `
-Change directory to $HOME/tmp.
+a. Choose your working directory (in another terminal).
+b. Choose the URL to download.
 
-    chdir ~/tmp
-`})
+NOTE: you can also set these parameters directly as CLI flags; try executing
+this program with '-h'.
+`,
+		Vars: []otium.Variable{
+			{Name: "pwd", Desc: "The output of 'pwd'"},
+			{
+				Name: "URL",
+				Desc: "URL to download",
+				// NOTE this shows how to use the validator function to set
+				// new k/v pairs in the Bag.
+				Fn: func(val string) error {
+					_, file := path.Split(val)
+					pcd.Put("file", file)
+					return nil
+				},
+			},
+		},
+	})
 
 	pcd.AddStep(&otium.Step{
-		Title: "Download a file",
+		Title: "Download the file",
 		Desc: `
-Download a file of your choice and put it in the tmp directory.
+Download the previous URL and put it in the pwd directory.
 
-    curl --location -O https://en.wikipedia.org/wiki/Special:Random 
+    curl --location -O {{.URL}}
 `,
-		Run: func(bag otium.Bag) error {
-			// This user input is needed also when step is automated.
-			URL, err := bag.Get("URL", "URL to download")
-			if err != nil {
-				return err
-			}
-			_, file := path.Split(URL)
-			bag.Put("File", file)
-
-			return nil
-		},
+		//Run: func(bag otium.Bag) error {
+		//	// actually download the URL and save it to bag[pwd]/bag[file]
+		//},
 	})
 
 	pcd.AddStep(&otium.Step{
@@ -59,13 +69,18 @@ Download a file of your choice and put it in the tmp directory.
 		Desc: `
 Calculate the checksum of the downloaded file.
 
-    sha256sum {{.File}}
+    sha256sum {{.pwd}}/{{.file}}
 `,
 		Run: func(bag otium.Bag) error {
-			file, err := bag.Get("File", "")
+			file, err := bag.Get("file")
 			if err != nil {
 				return err
 			}
+			pwd, err := bag.Get("pwd")
+			if err != nil {
+				return err
+			}
+			file = filepath.Join(pwd, file)
 
 			f, err := os.Open(file)
 			if err != nil {

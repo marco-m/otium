@@ -265,20 +265,12 @@ func TestExpectSimulateSutTimeout(t *testing.T) {
 }
 
 func TestExpectSimulateSutOsPipeSuccess(t *testing.T) {
-	stdin, stdout, exp := expect.NewFilePipe(100*time.Millisecond,
+	exp, cleanup := expect.NewFilePipe(100*time.Millisecond,
 		expect.MatchMaxDef)
+	defer cleanup()
 
 	// We simulate a sut that writes directly to os.Stdout and reads
 	// directly from os.Stdin
-
-	oldStdin := os.Stdin
-	os.Stdin = stdin
-	oldStdout := os.Stdout
-	os.Stdout = stdout
-	defer func() {
-		os.Stdin = oldStdin
-		os.Stdout = oldStdout
-	}()
 
 	target := func() error {
 		fmt.Print("1234567890")
@@ -297,7 +289,7 @@ func TestExpectSimulateSutOsPipeSuccess(t *testing.T) {
 	asyncErr := make(chan error)
 	go func() {
 		err := target()
-		stdout.Close()
+		os.Stdout.Close()
 		asyncErr <- err
 	}()
 
@@ -317,20 +309,12 @@ func TestExpectSimulateSutOsPipeSuccess(t *testing.T) {
 }
 
 func TestExpectSimulateSutOsPipeTimeout(t *testing.T) {
-	stdin, stdout, exp := expect.NewFilePipe(100*time.Millisecond,
+	exp, cleanup := expect.NewFilePipe(100*time.Millisecond,
 		expect.MatchMaxDef)
+	defer cleanup()
 
 	// We simulate a sut that writes directly to os.Stdout and reads
 	// directly from os.Stdin
-
-	oldStdin := os.Stdin
-	os.Stdin = stdin
-	oldStdout := os.Stdout
-	os.Stdout = stdout
-	defer func() {
-		os.Stdin = oldStdin
-		os.Stdout = oldStdout
-	}()
 
 	target := func() error {
 		for i := 1; i < 20; i++ {
@@ -343,7 +327,7 @@ func TestExpectSimulateSutOsPipeTimeout(t *testing.T) {
 	asyncErr := make(chan error)
 	go func() {
 		err := target()
-		stdout.Close()
+		os.Stdout.Close()
 		asyncErr <- err
 	}()
 

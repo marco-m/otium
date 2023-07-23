@@ -31,9 +31,9 @@ type Expect struct {
 }
 
 // New returns stdin as io.PipeReader, stdout as io.PipeWriter, and expect.
-// Once stdin and stdout are replaced in the SUT, expect and send can be
+// Once stdin and stdout are replaced in the SUT, Expect and Send can be
 // used by the test to communicate with the SUT.
-// If the timeout expires, the next expect or send will fail the test.
+// If the timeout expires, the next call to Expect or Send will fail the test.
 // Note that communication is blocking, so the test must run the SUT in a
 // goroutine.
 func New(timeout time.Duration, matchMax int) (
@@ -52,16 +52,16 @@ func New(timeout time.Duration, matchMax int) (
 	return stdinRd, stdoutWr, exp
 }
 
-// NewFilePipe returns stdin as os.File, stdout as os.File, and expect.
+// NewFilePipe swaps os.Stdin with stdinRd, os.Stdout with stdoutWr, where stdin
+// and stdout are of type os.File. It returns expect and a cleanup  function
+// to defer.
 // Use this constructor when your target writes directly to os.Stdout
 // and reads directly from os.Stdin (that is, it doesn't offer the possibility
 // to inject a pair of io.Reader, io.Writer).
 //
 // WARNING: in case the underlying pipe syscall fails, this function will
 // panic.
-func NewFilePipe(timeout time.Duration, matchMax int) (
-	*os.File, *os.File, *Expect,
-) {
+func NewFilePipe(timeout time.Duration, matchMax int) (*Expect, func()) {
 	var err error
 	stdinRd, stdinWr, err := os.Pipe()
 	if err != nil {
@@ -79,7 +79,16 @@ func NewFilePipe(timeout time.Duration, matchMax int) (
 		MatchMax: matchMax,
 	}
 
-	return stdinRd, stdoutWr, exp
+	oldStdin := os.Stdin
+	os.Stdin = stdinRd
+	oldStdout := os.Stdout
+	os.Stdout = stdoutWr
+	cleanup := func() {
+		os.Stdin = oldStdin
+		os.Stdout = oldStdout
+	}
+
+	return exp, cleanup
 }
 
 func (e *Expect) Expect(re string) (string, error) {

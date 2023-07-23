@@ -11,6 +11,8 @@ var (
 	//	    return fmt.Errorf("failed to X... %w", otium.ErrUnrecoverable)
 	//	},
 	ErrUnrecoverable = errors.New("(unrecoverable)")
+
+	version = "dev"
 )
 
 // Internal errors and control flow.

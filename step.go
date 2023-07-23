@@ -20,9 +20,10 @@ type Step struct {
 	// perform the step. If the step is automated, Desc should be shortened
 	// and adapted to the change.
 	Desc string
-	// Run is the implementation of the step. If the step is completely manual,
-	// Run must still be non nil. In this case, it can be empty, but probably
-	// it should still ask for input. See [RunFn] for details.
+	// Vars are the new variables needed by the step.
+	Vars []Variable
+	// Run is the optional automation of the step. If the step is manual,
+	// leave Run unset. See [RunFn] for details.
 	Run RunFn
 }
 
@@ -38,4 +39,11 @@ func (step *Step) validate(stepN int) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func (step *Step) Icon() string {
+	if step.Run != nil {
+		return "🤖"
+	}
+	return "🤠"
 }

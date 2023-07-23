@@ -11,22 +11,28 @@ func TestRender(t *testing.T) {
 	type testCase struct {
 		name string
 		text string
-		bag  map[string]string
+		bag  map[string]Variable
 		want string
 	}
 
 	run := func(t *testing.T, tc testCase) {
 		var buf bytes.Buffer
-		err := renderTemplate(&buf, tc.text, Bag{bag: tc.bag})
+		err := renderTemplate(&buf, tc.text, tc.bag)
 		qt.Assert(t, qt.IsNil(err))
 		qt.Assert(t, qt.Equals(buf.String(), tc.want))
 	}
 
 	testCases := []testCase{
 		{
-			name: "normal",
+			name: "uppercase",
 			text: "Hello {{.Name}}!",
-			bag:  map[string]string{"Name": "Joe"},
+			bag:  map[string]Variable{"Name": {val: "Joe"}},
+			want: "Hello Joe!",
+		},
+		{
+			name: "lowercase",
+			text: "Hello {{.name}}!",
+			bag:  map[string]Variable{"name": {val: "Joe"}},
 			want: "Hello Joe!",
 		},
 		{
@@ -35,7 +41,7 @@ func TestRender(t *testing.T) {
 			// <no value>. Is this OK or do we want to return an error?
 			name: "no value",
 			text: "Hello {{.Name}}!",
-			bag:  map[string]string{},
+			bag:  map[string]Variable{},
 			want: "Hello <no value>!",
 		},
 	}

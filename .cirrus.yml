@@ -9,6 +9,16 @@ test_task:
   build_script: go build ./...
   test_script: go test ./...
 
+smoke_task:
+  modules_cache:
+    fingerprint_script: cat go.sum
+    folder: $GOPATH/pkg/mod
+  get_script: go get ./...
+  test_script: |
+    go run ./examples/cliflags -h &&
+    go run ./examples/download -h &&
+    go run ./examples/phonex8 -h
+
 task:
   name: GolangCI Lint
   container:
