@@ -2,6 +2,12 @@
 
 https://github.com/marco-m/otium
 
+## UNRELEASED v0.1.6
+
+### New
+
+- When invoked with -h, an otium procedure prints also the otium version.
+
 ## v0.1.5 2023-7-23
 
 ### New
