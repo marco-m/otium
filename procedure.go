@@ -40,24 +40,21 @@ type ProcedureOpts struct {
 
 // NewProcedure creates a Procedure.
 func NewProcedure(opts ProcedureOpts) *Procedure {
-	pcd := &Procedure{
+	return &Procedure{
 		ProcedureOpts: opts,
-	}
-	pcd.bag = NewBag()
-
-	pcd.parser = kong.Must(&topcli{},
-		kong.Name(""),
-		kong.Exit(func(int) {}),
-		kong.ConfigureHelp(kong.HelpOptions{
+		bag:           NewBag(),
+		parser: kong.Must(&topcli{},
+			kong.Name(""),
+			kong.Exit(func(int) {}),
+			kong.ConfigureHelp(kong.HelpOptions{
+				// Must be disabled because it doesn't make sense in a REPL.
+				NoAppSummary:   true,
+				WrapUpperBound: 80,
+			}),
 			// Must be disabled because it doesn't make sense in a REPL.
-			NoAppSummary:   true,
-			WrapUpperBound: 80,
-		}),
-		// Must be disabled because it doesn't make sense in a REPL.
-		kong.NoDefaultHelp(),
-	)
-
-	return pcd
+			kong.NoDefaultHelp(),
+		),
+	}
 }
 
 // AddStep adds a [Step] to [Procedure].
