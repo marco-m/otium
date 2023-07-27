@@ -1,5 +1,4 @@
 - support command-line flags
-  - [x] detect if two steps try to set the same Variable in field Vars and fail with error
   - [ ] add field HideCli; if present, the variable will not be settable as CLI flag
   - [ ] decide if we support default values, because if we support them, it means they can
     be overridden only as flags, unless we still do the autocompletion of the "set"
@@ -15,8 +14,7 @@
 - [ ] simplify all regexp of Expect by changing the prompt!!!
 - [ ] add dry-run and generate document...
 
-- [ ] add build version!
-
+- [ ] in the --help output, separate the list of flags for the bag from the list of flags of otium itself! As-is, it is quite confusing.
 - [ ] add color to the titles
 
 - support pre-flight checks, for example to check for the presence of aws-vault, in a

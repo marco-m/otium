@@ -112,6 +112,9 @@ func (pcd *Procedure) Execute(args []string) error {
 			})
 	}
 
+	var docOnly bool
+	cliFlags.BoolVar(&docOnly, "doc-only", false, "Print documentation only instead of running")
+
 	// Parse the command-line.
 	cliFlags.Usage = func() {
 		out := cliFlags.Output()
@@ -156,6 +159,15 @@ func (pcd *Procedure) Execute(args []string) error {
 	fmt.Printf("# %s\n\n", pcd.Title)
 	fmt.Printf("%s\n", pcd.Desc)
 	printToc(pcd)
+
+	if docOnly {
+		for pcd.stepIdx != len(pcd.steps) {
+			if err := visitStep(pcd, nil); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 
 	//
 	// Main loop.

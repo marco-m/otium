@@ -70,6 +70,10 @@ Commands:
 (top)>>
 ```
 
+## Printing the document instead of running
+
+Invoke the otium procedure with `--doc-only`.
+
 ## Setting a bag value from the command line
 
 Sometimes you know beforehand some of the variables that the procedure steps
