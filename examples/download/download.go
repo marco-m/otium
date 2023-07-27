@@ -100,5 +100,5 @@ Calculate the checksum of the downloaded file.
 		},
 	})
 
-	return pcd.Execute()
+	return pcd.Execute(os.Args)
 }

@@ -2,6 +2,12 @@
 
 https://github.com/marco-m/otium
 
+## UNRELEASED v0.1.7
+
+### Breaking
+
+- Procedure.Execute: change signature to `Execute(args []string) error`, to ease testing. Normally you would use this as `pcd.Execute(os.Args)`.
+
 ## v0.1.6 2023-7-24
 
 ### New

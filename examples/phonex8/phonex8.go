@@ -70,5 +70,5 @@ B. 'SumPhoneNumberX8': add up all the digits in 'PhoneNumberX8', and then add
 		},
 	})
 
-	return pcd.Execute()
+	return pcd.Execute(os.Args)
 }

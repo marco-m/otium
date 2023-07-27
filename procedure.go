@@ -62,10 +62,11 @@ func (pcd *Procedure) AddStep(step *Step) {
 	pcd.steps = append(pcd.steps, step)
 }
 
-// Execute starts the [Procedure] by putting the user into a REPL.
+// Execute parses the command-line passed in args, assigns bag variables and
+// starts the [Procedure] by putting the user into a REPL.
 // If it returns an error, the user program should print it and exit with a
 // non-zero status code. See the examples for the suggested usage.
-func (pcd *Procedure) Execute() error {
+func (pcd *Procedure) Execute(args []string) error {
 	var errs []error
 	errs = append(errs, pcd.validate())
 	for i, step := range pcd.steps {
@@ -95,10 +96,13 @@ func (pcd *Procedure) Execute() error {
 		return err
 	}
 
+	// Setup command-line parsing.
+	cliFlags := flag.NewFlagSet(args[0], flag.ExitOnError)
+
 	// Add the Vars in the bag as CLI flags.
 	for name, variable := range pcd.bag.bag {
 		name, variable := name, variable // avoid loop capture :-(
-		flag.Func(name, variable.Desc,
+		cliFlags.Func(name, variable.Desc,
 			func(val string) error {
 				if err := variable.Fn(val); err != nil {
 					return err
@@ -109,16 +113,16 @@ func (pcd *Procedure) Execute() error {
 	}
 
 	// Parse the command-line.
-	flag.Usage = func() {
-		out := flag.CommandLine.Output()
+	cliFlags.Usage = func() {
+		out := cliFlags.Output()
 		fmt.Fprintf(out, "%s: %s.\n", pcd.Name, pcd.Title)
 		fmt.Fprintf(out,
 			"This program is based on otium %s, a simple incremental automation system (https://github.com/marco-m/otium)\n",
 			version)
 		fmt.Fprintf(out, "\nUsage of %s:\n", pcd.Name)
-		flag.PrintDefaults()
+		cliFlags.PrintDefaults()
 	}
-	flag.Parse()
+	cliFlags.Parse(args[1:])
 
 	// We cannot initialize liner before (say, in NewProcedure), because
 	// NewLiner changes the terminal line discipline, so we must do this

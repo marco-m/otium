@@ -13,13 +13,15 @@ import (
 	"github.com/marco-m/otium/expect"
 )
 
+var osArgs = []string{"exe.name"}
+
 func TestProcedure_ExecuteWithZeroStepsFails(t *testing.T) {
 	pcd := otium.NewProcedure(otium.ProcedureOpts{
 		Title: "Simple title",
 		Desc:  `Simple description`,
 	})
 
-	err := pcd.Execute()
+	err := pcd.Execute(osArgs)
 
 	qt.Assert(t, qt.ErrorMatches(err,
 		"procedure has zero steps; want at least one"))
@@ -32,7 +34,7 @@ func TestProcedure_ExecuteStepWithMissingFieldsFails(t *testing.T) {
 	})
 	pcd.AddStep(&otium.Step{Title: ""})
 
-	err := pcd.Execute()
+	err := pcd.Execute(osArgs)
 
 	qt.Assert(t, qt.ErrorMatches(err, `step \(1\) has empty Title`))
 }
@@ -51,7 +53,7 @@ func TestProcedure_ExecuteDuplicateVarsInSameStepFail(t *testing.T) {
 		},
 	})
 
-	err := pcd.Execute()
+	err := pcd.Execute(osArgs)
 
 	qt.Assert(t, qt.ErrorMatches(err, `step "Step A": duplicate var "fruit"`))
 }
@@ -70,7 +72,7 @@ func TestProcedure_ExecuteDuplicateVarsInDifferentStepsFail(t *testing.T) {
 		Vars:  []otium.Variable{{Name: "fruit"}},
 	})
 
-	err := pcd.Execute()
+	err := pcd.Execute(osArgs)
 
 	qt.Assert(t, qt.ErrorMatches(err, `step "Step B": duplicate var "fruit"`))
 }
@@ -90,8 +92,7 @@ func TestProcedure_ExecuteOneStepNoRunWithVarFromCLI(t *testing.T) {
 
 	asyncErr := make(chan error)
 	go func() {
-		os.Args = []string{"exe.name", "--fruit=mango"}
-		err := sut.Execute()
+		err := sut.Execute([]string{"exe.name", "--fruit=mango"})
 		os.Stdout.Close()
 		asyncErr <- err
 	}()
@@ -142,7 +143,7 @@ func TestProcedure_ExecuteOneStepWithRunSuccess(t *testing.T) {
 
 	asyncErr := make(chan error)
 	go func() {
-		err := sut.Execute()
+		err := sut.Execute(osArgs)
 		os.Stdout.Close()
 		asyncErr <- err
 	}()
@@ -202,7 +203,7 @@ func TestProcedure_ExecuteOneStepWithRunFailure(t *testing.T) {
 
 	asyncErr := make(chan error)
 	go func() {
-		err := sut.Execute()
+		err := sut.Execute(osArgs)
 		os.Stdout.Close()
 		asyncErr <- err
 	}()

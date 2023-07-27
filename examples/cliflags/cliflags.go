@@ -83,5 +83,5 @@ instead of waiting to be prompted for them.
 		},
 	})
 
-	return pcd.Execute()
+	return pcd.Execute(os.Args)
 }

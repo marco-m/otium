@@ -12,6 +12,7 @@
   - [ ] add callback AfterCliFn(bag) error, to otium.ProcedureOpts, that can be used to
     validate the results of the cli parsing (for example, mandatory flags)
 
+- [ ] simplify all regexp of Expect by changing the prompt!!!
 - [ ] add dry-run and generate document...
 
 - [ ] add build version!
