@@ -110,14 +110,14 @@ next->  1. 🤠 step 1
 (top)>> `
 	// Flag (?s) means that . matches also \n
 	have, err := exp.Expect(`(?s).*(\(top\)>>.*\n){2}\(top\)>> `)
-	qt.Assert(t, qt.IsNil(err))
+	qt.Check(t, qt.IsNil(err))
 	qt.Assert(t, qt.Equals(have, want1))
 
 	err = exp.Send("next\n")
 	qt.Assert(t, qt.IsNil(err))
 
 	have, err = exp.Expect(`.*terminated successfully`)
-	qt.Assert(t, qt.IsNil(err))
+	qt.Check(t, qt.IsNil(err))
 	qt.Assert(t, qt.Equals(have, "(top)>> Procedure terminated successfully"))
 
 	err = <-asyncErr
@@ -161,19 +161,19 @@ next->  1. 🤖 step 1
 (top)>> `
 	// Flag (?s) means that . matches also \n
 	have, err := exp.Expect(`(?s).*(\(top\)>>.*\n){2}\(top\)>> `)
-	qt.Assert(t, qt.IsNil(err))
+	qt.Check(t, qt.IsNil(err))
 	qt.Assert(t, qt.Equals(have, want1))
 
 	// FIXME just found a bug!!!
 	//have, err = exp.Expect(`not existing`)
-	//qt.Assert(t, qt.ErrorIs())(t, err, expect.ErrTimeout)
+	//qt.Check(t, qt.ErrorIs())(t, err, expect.ErrTimeout)
 	//qt.Assert(t, qt.Equal())(t, have, "")
 
 	err = exp.Send("next\n")
 	qt.Assert(t, qt.IsNil(err))
 
 	have, err = exp.Expect(`.*hello from step 1`)
-	qt.Assert(t, qt.IsNil(err))
+	qt.Check(t, qt.IsNil(err))
 	qt.Assert(t, qt.Equals(have, "hello from step 1"))
 
 	err = exp.Send("quit\n")
