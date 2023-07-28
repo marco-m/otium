@@ -125,7 +125,10 @@ func (pcd *Procedure) Execute(args []string) error {
 		fmt.Fprintf(out, "\nUsage of %s:\n", pcd.Name)
 		cliFlags.PrintDefaults()
 	}
-	cliFlags.Parse(args[1:])
+	if err := cliFlags.Parse(args[1:]); err != nil {
+		// impossible due to flag.ExitOnError
+		return err
+	}
 
 	// We cannot initialize liner before (say, in NewProcedure), because
 	// NewLiner changes the terminal line discipline, so we must do this

@@ -222,3 +222,103 @@ func TestProcedure_ExecuteOneStepWithRunFailure(t *testing.T) {
 	err = <-asyncErr
 	qt.Assert(t, qt.ErrorIs(err, otium.ErrUnrecoverable))
 }
+
+func TestGenerateDocNoVars(t *testing.T) {
+	exp, cleanup := expect.NewFilePipe(100*time.Millisecond,
+		expect.MatchMaxDef)
+	defer cleanup()
+
+	sut := otium.NewProcedure(otium.ProcedureOpts{
+		Title: "My preferred fruits",
+		Desc:  `An overview of fabulous fruits.`,
+	})
+	sut.AddStep(&otium.Step{
+		Title: "Red fruits",
+		Desc:  `Watermelon`,
+	})
+	sut.AddStep(&otium.Step{
+		Title: "Blue fruits",
+		Desc:  `Blueberry`,
+	})
+
+	asyncErr := make(chan error)
+	go func() {
+		err := sut.Execute([]string{"exe.name", "--doc-only"})
+		asyncErr <- err
+	}()
+
+	want := `# My preferred fruits
+
+An overview of fabulous fruits.
+
+## Table of contents
+
+next->  1. 🤠 Red fruits
+        2. 🤠 Blue fruits
+
+
+## 1. 🤠 Red fruits
+
+Watermelon
+
+
+## 2. 🤠 Blue fruits
+
+Blueberry
+`
+
+	// Flag (?s) means that . matches also \n
+	have, err := exp.Expect(`(?s).*Blueberry\n`)
+	qt.Check(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have, want))
+
+	err = <-asyncErr
+	qt.Assert(t, qt.IsNil(err))
+}
+
+func TestGenerateDocWithVars(t *testing.T) {
+	exp, cleanup := expect.NewFilePipe(100*time.Millisecond,
+		expect.MatchMaxDef)
+	defer cleanup()
+
+	sut := otium.NewProcedure(otium.ProcedureOpts{
+		Title: "My preferred fruits",
+		Desc:  `An overview of fabulous fruits.`,
+	})
+	sut.AddStep(&otium.Step{
+		Title: "Red fruits",
+		Desc:  `Watermelon`,
+		Vars: []otium.Variable{{
+			Name: "fruit",
+			Desc: "Your preferred fruit",
+		}},
+	})
+
+	asyncErr := make(chan error)
+	go func() {
+		err := sut.Execute([]string{"exe.name", "--doc-only"})
+		asyncErr <- err
+	}()
+
+	want := `# My preferred fruits
+
+An overview of fabulous fruits.
+
+## Table of contents
+
+next->  1. 🤠 Red fruits
+
+
+## 1. 🤠 Red fruits
+
+Watermelon
+`
+
+	// Flag (?s) means that . matches also \n
+	have, err := exp.Expect(`(?s).*Watermelon\n`)
+	qt.Check(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have, want))
+
+	err = <-asyncErr
+	qt.Assert(t, qt.IsNil(err))
+}
