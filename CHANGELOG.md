@@ -2,7 +2,7 @@
 
 https://github.com/marco-m/otium
 
-## UNRELEASED v0.1.7
+## v0.1.7 2023-7-29
 
 ### New
 
