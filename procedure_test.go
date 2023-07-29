@@ -106,11 +106,11 @@ Simple description
 next->  1. 🤠 step 1
 
 
-(top)>> Next step: 1. 🤠 step 1
-(top)>> Enter a command or '?' for help
+(top) Next step: 1. 🤠 step 1
+(top) Enter a command or '?' for help
 (top)>> `
 	// Flag (?s) means that . matches also \n
-	have, err := exp.Expect(`(?s).*(\(top\)>>.*\n){2}\(top\)>> `)
+	have, err := exp.Expect(`(?s).*\(top\)>> `)
 	qt.Check(t, qt.IsNil(err))
 	qt.Assert(t, qt.Equals(have, want1))
 
@@ -119,7 +119,7 @@ next->  1. 🤠 step 1
 
 	have, err = exp.Expect(`.*terminated successfully`)
 	qt.Check(t, qt.IsNil(err))
-	qt.Assert(t, qt.Equals(have, "(top)>> Procedure terminated successfully"))
+	qt.Assert(t, qt.Equals(have, "(top) Procedure terminated successfully"))
 
 	err = <-asyncErr
 	qt.Assert(t, qt.IsNil(err))
@@ -157,11 +157,11 @@ Simple description
 next->  1. 🤖 step 1
 
 
-(top)>> Next step: 1. 🤖 step 1
-(top)>> Enter a command or '?' for help
+(top) Next step: 1. 🤖 step 1
+(top) Enter a command or '?' for help
 (top)>> `
 	// Flag (?s) means that . matches also \n
-	have, err := exp.Expect(`(?s).*(\(top\)>>.*\n){2}\(top\)>> `)
+	have, err := exp.Expect(`(?s).*\(top\)>> `)
 	qt.Check(t, qt.IsNil(err))
 	qt.Assert(t, qt.Equals(have, want1))
 
@@ -208,8 +208,7 @@ func TestProcedure_ExecuteOneStepWithRunFailure(t *testing.T) {
 		asyncErr <- err
 	}()
 
-	// Flag (?s) means that . matches also \n
-	_, err := exp.Expect(`(?s).*\(top\)>>.*\(top\)>> `)
+	_, err := exp.Expect(`\(top\)>> `)
 	qt.Assert(t, qt.IsNil(err))
 
 	err = exp.Send("next\n")

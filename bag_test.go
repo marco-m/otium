@@ -83,7 +83,7 @@ func TestBag_AskKeyInteractive(t *testing.T) {
 
 	have, err := exp.Expect(`.*Enter Your fruit for breakfast \(set fruit <value>\) or '\?' for help\n\(input\)>> `)
 	qt.Assert(t, qt.IsNil(err))
-	qt.Assert(t, qt.Equals(have, "(input)>> Enter Your fruit for breakfast (set fruit <value>) or '?' for help\n(input)>> "))
+	qt.Assert(t, qt.Equals(have, "(input) Enter Your fruit for breakfast (set fruit <value>) or '?' for help\n(input)>> "))
 
 	err = exp.Send("set fruit banana\n")
 	qt.Assert(t, qt.IsNil(err))

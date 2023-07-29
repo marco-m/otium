@@ -178,7 +178,7 @@ func (pcd *Procedure) Execute(args []string) error {
 	var kongCtx *kong.Context
 	for {
 		if pcd.stepIdx == len(pcd.steps) {
-			fmt.Printf("\n(top)>> Procedure terminated successfully\n")
+			fmt.Printf("\n(top) Procedure terminated successfully\n")
 			return nil
 		}
 
@@ -187,9 +187,9 @@ func (pcd *Procedure) Execute(args []string) error {
 		pcd.term.SetCompleter(topCompleter)
 
 		next := pcd.steps[pcd.stepIdx]
-		fmt.Printf("\n(top)>> Next step: %d. %s %s\n",
+		fmt.Printf("\n(top) Next step: %d. %s %s\n",
 			pcd.stepIdx+1, next.Icon(), next.Title)
-		fmt.Printf("(top)>> Enter a command or '?' for help\n")
+		fmt.Printf("(top) Enter a command or '?' for help\n")
 		var line string
 		line, err := pcd.term.Prompt("(top)>> ")
 		// TODO if we receive EOF, we should return no error if the procedure

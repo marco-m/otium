@@ -71,7 +71,7 @@ func (bag *Bag) ask(key string, term *liner.State) (string, error) {
 	term.SetCompleter(makeInputCompleter(key))
 
 	for {
-		fmt.Printf("(input)>> Enter %s (set %s <value>) or '?' for help\n",
+		fmt.Printf("(input) Enter %s (set %s <value>) or '?' for help\n",
 			variable.Desc, key)
 		line, err := term.PromptWithSuggestion(
 			"(input)>> ", "set "+key+" ", -1)

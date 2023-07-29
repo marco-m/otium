@@ -45,7 +45,7 @@ Run the program. It has a REPL with command completion and history, thanks
 to [peterh/liner]. Enter `?` or `<TAB>` twice to get started:
 
 ```
-(top)>> Enter a command or '?' for help
+(top) Enter a command or '?' for help
 (top)>> ?
 
 Commands:
