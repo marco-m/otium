@@ -183,6 +183,35 @@ pcd.AddStep(&otium.Step{
 })
 ```
 
+## Support for pre-flight checks user context
+
+Sometimes you need to do one or both of the following:
+
+1. Perform procedure-specific validations before running the steps, for example ensuring
+   that a specific environment variable is set. Nevertheless, you still want the procedure
+   to return normal help usage if invoked with --help.
+2. Initialize and then pass to each step a user context, for example a struct representing
+   an API client.
+
+This is achieved as follows.
+
+- Set field PostCli of otium.ProcedureOpts to your callback function, that performs the validations you need and returns an initialized user context.
+  ```go
+    PostCli: func() (any, error) {
+        return foo.NewClient(), nil
+    },
+  ```
+- In the callback,
+- At each step, in the Run function, perform a type assert and get your user context:
+  ```go
+    Run: func(bag otium.Bag, uctx any) error {
+        // Type assertion (https://go.dev/tour/methods/15)
+        fooClient := uctx.(*foo.Client)
+    }
+  ```
+
+See [examples/usercontext](examples/usercontext) for a complete example.
+
 ## Design decisions
 
 - To test the interactive behavior, I wrote a minimal `expect` package, inspired

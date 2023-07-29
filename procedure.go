@@ -22,6 +22,7 @@ type Procedure struct {
 	steps   []*Step
 	stepIdx int // Index into the step to execute.
 	bag     Bag
+	uctx    any // The optional user context.
 	parser  *kong.Kong
 	// Warning: term will be initialized by Execute(), not by NewProcedure().
 	term *liner.State
@@ -36,6 +37,12 @@ type ProcedureOpts struct {
 	// Desc is the summary of what the procedure is about, shown at the beginning of
 	// the program, just after the Title.
 	Desc string
+	// PreFlight is an optional function run after the command-line has been parsed and
+	// before the first step.
+	// It is used to perform procedure-specific validations and to initialize the user
+	// context. Such user context will then be passed as parameter uctx to each call
+	// of Step.Run(bag Bag, uctx any).
+	PreFlight func() (any, error)
 }
 
 // NewProcedure creates a Procedure.
@@ -128,6 +135,14 @@ func (pcd *Procedure) Execute(args []string) error {
 	if err := cliFlags.Parse(args[1:]); err != nil {
 		// impossible due to flag.ExitOnError
 		return err
+	}
+
+	if !docOnly && pcd.PreFlight != nil {
+		var err error
+		pcd.uctx, err = pcd.PreFlight()
+		if err != nil {
+			return fmt.Errorf("PreFlight: %s", err)
+		}
 	}
 
 	// We cannot initialize liner before (say, in NewProcedure), because

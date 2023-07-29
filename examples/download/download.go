@@ -71,7 +71,7 @@ Calculate the checksum of the downloaded file.
 
     sha256sum {{.pwd}}/{{.file}}
 `,
-		Run: func(bag otium.Bag) error {
+		Run: func(bag otium.Bag, uctx any) error {
 			file, err := bag.Get("file")
 			if err != nil {
 				return err

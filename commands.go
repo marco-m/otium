@@ -70,7 +70,7 @@ func visitAsNext(pcd *Procedure, step *Step) error {
 
 	// Run the step.
 	if step.Run != nil {
-		if err := step.Run(pcd.bag); err != nil {
+		if err := step.Run(pcd.bag, pcd.uctx); err != nil {
 			return fmt.Errorf("step %d: %w", pcd.stepIdx+1, err)
 		}
 	}

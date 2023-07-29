@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-// RunFn is the function that automates a [Step]. When called, bag will contain
-// all the key/value pairs set by the previous steps. A typical RunFn will use
-// [Bag.Get] to get a k/v and [Bag.Put] to put a k/v.
-type RunFn func(bag Bag) error
-
 // Step is part of a [Procedure]. See [Procedure.Add].
 type Step struct {
 	// Title is the name of the step, shown in table of contents and at the
@@ -23,8 +18,14 @@ type Step struct {
 	// Vars are the new variables needed by the step.
 	Vars []Variable
 	// Run is the optional automation of the step. If the step is manual,
-	// leave Run unset. See [RunFn] for details.
-	Run RunFn
+	// leave Run unset. When called, bag will contain all the key/value pairs
+	// set by the previous steps and uctx, if not nil, will point to the user
+	// context.
+	// A typical Run will use [Bag.Get] to get a k/v, [Bag.Put] to put a k/v and
+	// will type assert uctx to the type returned by [ProcedureOpts.PreFlight].
+	// For the user context, see also [ProcedureOpts.PreFlight] and
+	// examples/usercontext.
+	Run func(bag Bag, uctx any) error
 }
 
 // validate checks that step is valid. Meant to be called by Procedure.Exec.

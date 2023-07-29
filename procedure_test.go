@@ -135,7 +135,7 @@ func TestProcedure_ExecuteOneStepWithRunSuccess(t *testing.T) {
 	})
 	sut.AddStep(&otium.Step{
 		Title: "step 1",
-		Run: func(bag otium.Bag) error {
+		Run: func(bag otium.Bag, uctx any) error {
 			fmt.Println("hello from step 1")
 			return nil
 		},
@@ -196,7 +196,7 @@ func TestProcedure_ExecuteOneStepWithRunFailure(t *testing.T) {
 	sut := otium.NewProcedure(otium.ProcedureOpts{Title: "Simple title"})
 	sut.AddStep(&otium.Step{
 		Title: "step 1",
-		Run: func(bag otium.Bag) error {
+		Run: func(bag otium.Bag, uctx any) error {
 			return fmt.Errorf("flatlined %w", otium.ErrUnrecoverable)
 		},
 	})
@@ -317,6 +317,89 @@ Watermelon
 	have, err := exp.Expect(`(?s).*Watermelon\n`)
 	qt.Check(t, qt.IsNil(err))
 	qt.Assert(t, qt.Equals(have, want))
+
+	err = <-asyncErr
+	qt.Assert(t, qt.IsNil(err))
+}
+
+func TestPreFlight(t *testing.T) {
+	exp, cleanup := expect.NewFilePipe(100*time.Millisecond,
+		expect.MatchMaxDef)
+	defer cleanup()
+
+	type usercontext struct {
+		answer int
+	}
+
+	sut := otium.NewProcedure(otium.ProcedureOpts{
+		Title: "The title",
+		PreFlight: func() (any, error) {
+			return &usercontext{answer: 42}, nil
+		},
+	})
+	sut.AddStep(&otium.Step{
+		Title: "Modify user context",
+		Run: func(bag otium.Bag, uctx any) error {
+			fooClient := uctx.(*usercontext)
+			qt.Check(t, qt.Equals(fooClient.answer, 42))
+			fooClient.answer = 99
+			return nil
+		},
+	})
+	sut.AddStep(&otium.Step{
+		Title: "Read modified user context",
+		Run: func(bag otium.Bag, uctx any) error {
+			fooClient := uctx.(*usercontext)
+			qt.Check(t, qt.Equals(fooClient.answer, 99))
+			fmt.Println("end of test")
+			return nil
+		},
+	})
+
+	asyncErr := make(chan error)
+	go func() {
+		err := sut.Execute(osArgs)
+		asyncErr <- err
+	}()
+
+	want1 := `# The title
+
+
+
+## Table of contents
+
+next->  1. 🤖 Modify user context
+        2. 🤖 Read modified user context
+
+
+(top) Next step: 1. 🤖 Modify user context
+(top) Enter a command or '?' for help
+(top)>> `
+	// Flag (?s) means that . matches also \n
+	have1, err := exp.Expect(`(?s).*\(top\)>> `)
+	qt.Check(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have1, want1))
+
+	err = exp.Send("next\n")
+	qt.Assert(t, qt.IsNil(err))
+
+	want2 := `
+## 1. 🤖 Modify user context
+
+
+(top) Next step: 2. 🤖 Read modified user context
+(top) Enter a command or '?' for help
+(top)>> `
+	// Flag (?s) means that . matches also \n
+	have2, err := exp.Expect(`(?s).*\(top\)>> `)
+	qt.Check(t, qt.IsNil(err))
+	qt.Assert(t, qt.Equals(have2, want2))
+
+	err = exp.Send("next\n")
+	qt.Assert(t, qt.IsNil(err))
+
+	_, err = exp.Expect(`end of test\n`)
+	qt.Check(t, qt.IsNil(err))
 
 	err = <-asyncErr
 	qt.Assert(t, qt.IsNil(err))

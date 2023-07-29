@@ -12,7 +12,6 @@
     validate the results of the cli parsing (for example, mandatory flags)
 
 - [ ] simplify all regexp of Expect by changing the prompt!!!
-- [ ] add dry-run and generate document...
 
 - [ ] in the --help output, separate the list of flags for the bag from the list of flags of otium itself! As-is, it is quite confusing.
 - [ ] add color to the titles

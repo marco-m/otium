@@ -27,6 +27,7 @@ tasks:
       - go run ./examples/cliflags -h
       - go run ./examples/download -h
       - go run ./examples/phonex8 -h
+      - go run ./examples/usercontext -h
 
   deps:
     cmds:

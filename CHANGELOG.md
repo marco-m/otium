@@ -6,11 +6,14 @@ https://github.com/marco-m/otium
 
 ### New
 
-- When invoked with --doc-only, an otium procedure prints the documentation instead of running.
+- Support user context via `Step.Run(bag Bag, uctx any) error`
+- Support pre-flight checks via `ProcedureOpts.PreFlight() (any, error)`
+- When invoked with `--doc-only`, an otium procedure prints the documentation instead of running.
 
 ### Breaking
 
-- Procedure.Execute: change signature to `Execute(args []string) error`, to ease testing. Normally you would use this as `pcd.Execute(os.Args)`.
+- `Procedure.Execute`: change signature to `Execute(args []string) error`, to ease testing. Normally you would use this as `pcd.Execute(os.Args)`.
+- `Step.Run`: change signature to `Run func(bag Bag, uctx any) error`
 
 ## v0.1.6 2023-7-24
 

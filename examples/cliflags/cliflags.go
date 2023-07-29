@@ -65,7 +65,7 @@ instead of waiting to be prompted for them.
 			},
 			{Name: "amount", Desc: "How many pieces of fruit"},
 		},
-		Run: func(bag otium.Bag) error {
+		Run: func(bag otium.Bag, uctx any) error {
 			fruit, err := bag.Get("fruit")
 			if err != nil {
 				return err
