@@ -1,5 +1,7 @@
 # otium: incremental automation of manual procedures
 
+[![Build Status](https://api.cirrus-ci.com/github/marco-m/otium.svg?branch=master)](https://cirrus-ci.com/github/marco-m/otium)
+
 Otium attempts to solve the dilemma of procedures that are tedious,
 time-consuming and error-prone to perform manually but that are impractical to
 automate right now: maybe you don't have time, cannot yet see the justification,
